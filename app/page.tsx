@@ -31,18 +31,18 @@ export default async function Home() {
           </div>
           <div className="relative z-10 mx-auto grid w-full max-w-7xl items-center px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
             <div className="max-w-3xl pb-8 sm:pb-12">
-              <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs backdrop-blur sm:px-4 sm:text-sm">
+              <div className="animate-fade-up mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs backdrop-blur sm:px-4 sm:text-sm">
                 <Sparkles className="size-4 text-[#f6d87f]" />
                 <span className="truncate">Premium hair rituals for a polished crown</span>
               </div>
-              <h1 className="max-w-4xl text-[2.65rem] font-normal leading-[1.05] tracking-tight text-[#fff8df] sm:text-6xl sm:leading-[1.03] lg:text-7xl">
+              <h1 className="animate-fade-up-delay-1 max-w-4xl text-[2.65rem] font-normal leading-[1.05] tracking-tight text-[#fff8df] sm:text-6xl sm:leading-[1.03] lg:text-7xl">
                 Luxury care for every strand, edge, and finish.
               </h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-violet-100 sm:mt-6 sm:text-lg sm:leading-8">
+              <p className="animate-fade-up-delay-2 mt-5 max-w-2xl text-base leading-7 text-violet-100 sm:mt-6 sm:text-lg sm:leading-8">
                 High-performance hair essentials designed with clean textures, luminous shine, and salon-level polish.
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row">
-                <Button asChild className="h-12 rounded-full px-6 sm:px-7">
+              <div className="animate-fade-up-delay-2 mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row">
+                <Button asChild className="gold-glow h-12 rounded-full px-6 sm:px-7">
                   <Link href="/products">
                     Shop the collection <ArrowRight />
                   </Link>
@@ -61,9 +61,9 @@ export default async function Home() {
             ["Salon polish", "Rituals built for shine and control."],
             ["Texture first", "Made for curls, coils, waves, and silk press care."],
           ].map(([title, copy]) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.96] p-5 shadow-sm shadow-black/10">
+            <div key={title} className="card-lift rounded-2xl border border-white/10 bg-white/[0.96] p-5 shadow-sm shadow-black/10">
               <ShieldCheck className="mb-4 size-5 text-[#8b5a00]" />
-              <h2 className="font-semibold text-[#24102f]">{title}</h2>
+              <h2 className="font-heading text-base font-semibold text-[#24102f]">{title}</h2>
               <p className="mt-2 text-sm leading-6 text-[#65526d]">{copy}</p>
             </div>
           ))}
@@ -86,7 +86,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="bg-[#fff8f0] px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
+        <section className="bg-[#fff8f0] px-4 py-14 sm:px-6 sm:py-16 lg:px-8" style={{background: "linear-gradient(135deg, #fff8f0 0%, #fdf0f8 50%, #f9f0ff 100%)"}}>
           <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-12">
             <div className="relative isolate aspect-[4/5] max-h-[720px] overflow-hidden rounded-[1.5rem] bg-violet-100 shadow-2xl shadow-[#1a0824]/20 sm:rounded-[2rem]">
               <Image

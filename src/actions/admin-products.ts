@@ -1,0 +1,120 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import type { Product, ProductInput } from "@/src/types/product";
+
+async function verifyAdmin() {
+  const supabase = getSupabaseServerClient();
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authCookieNames.access)?.value;
+
+  if (!supabase || !token) {
+    throw new Error("Unauthorized");
+  }
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) {
+    throw new Error("Unauthorized");
+  }
+
+  const { data: userData } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (userData?.role !== "admin") {
+    throw new Error("Forbidden");
+  }
+
+  return { supabase, user };
+}
+
+async function logAudit(supabase: any, adminId: string, action: string, entity: string, entityId: string | null, details: any = null) {
+  await supabase.from("audit_logs").insert({
+    admin_id: adminId,
+    action,
+    entity,
+    entity_id: entityId,
+    details,
+  });
+}
+
+export async function createProductAction(input: ProductInput): Promise<Product> {
+  const { supabase, user } = await verifyAdmin();
+
+  const { data, error } = await supabase.from("products").insert(input).select("*").single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await logAudit(supabase, user.id, "create", "product", data.id, { title: input.title });
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+  
+  return data as Product;
+}
+
+export async function updateProductAction(id: string, input: ProductInput): Promise<Product> {
+  const { supabase, user } = await verifyAdmin();
+
+  const { data, error } = await supabase
+    .from("products")
+    .update(input)
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await logAudit(supabase, user.id, "update", "product", id, { title: input.title });
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+
+  return data as Product;
+}
+
+export async function deleteProductAction(id: string): Promise<void> {
+  const { supabase, user } = await verifyAdmin();
+
+  const { error } = await supabase.from("products").delete().eq("id", id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await logAudit(supabase, user.id, "delete", "product", id);
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+}
+
+export async function uploadProductImageAction(formData: FormData): Promise<string> {
+  const { supabase, user } = await verifyAdmin();
+
+  const file = formData.get("file") as File;
+  if (!file) {
+    throw new Error("No file provided");
+  }
+
+  const extension = file.name.split(".").pop() ?? "jpg";
+  const path = `products/${crypto.randomUUID()}.${extension}`;
+  
+  const { error } = await supabase.storage.from("product-images").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  await logAudit(supabase, user.id, "upload", "image", path);
+
+  const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+  return data.publicUrl;
+}

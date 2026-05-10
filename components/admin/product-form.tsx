@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createProduct, updateProduct, uploadProductImage } from "@/src/services/products";
+import { createProductAction, updateProductAction, uploadProductImageAction } from "@/src/actions/admin-products";
 import type { Product } from "@/src/types/product";
 
 const productSchema = z.object({
@@ -63,7 +63,9 @@ export function ProductForm({
     setUploading(true);
     setStatus(null);
     try {
-      const publicUrl = await uploadProductImage(file);
+      const formData = new FormData();
+      formData.append("file", file);
+      const publicUrl = await uploadProductImageAction(formData);
       form.setValue("image", publicUrl, { shouldValidate: true });
       setStatus("Image uploaded.");
     } catch (error) {
@@ -77,8 +79,8 @@ export function ProductForm({
     setStatus(null);
     try {
       const saved = product?.id
-        ? await updateProduct(product.id, values)
-        : await createProduct(values);
+        ? await updateProductAction(product.id, values)
+        : await createProductAction(values);
       setStatus("Product saved.");
       onSaved?.(saved);
       if (!product) {

@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ProductForm } from "@/components/admin/product-form";
-import { deleteProduct } from "@/src/services/products";
+import { deleteProductAction } from "@/src/actions/admin-products";
 import type { Product } from "@/src/types/product";
 import { formatCurrency } from "@/src/utils/format";
 
@@ -31,7 +31,7 @@ export function ProductTable({ products: initialProducts }: { products: Product[
   async function remove(id: string) {
     setMessage(null);
     try {
-      await deleteProduct(id);
+      await deleteProductAction(id);
       setProducts((current) => current.filter((product) => product.id !== id));
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Delete failed.");

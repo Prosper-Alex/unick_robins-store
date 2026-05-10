@@ -3,27 +3,23 @@
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, Boxes, LayoutDashboard, LogOut } from "lucide-react";
+import { BarChart3, Boxes, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const items = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Boxes },
+  { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isLogin = pathname === "/admin/login";
-
-  if (isLogin) {
-    return children;
-  }
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/admin/login");
+    router.replace("/account/login");
   }
 
   return (

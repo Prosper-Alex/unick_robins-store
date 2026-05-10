@@ -2,17 +2,29 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { isRateLimited } from "@/src/lib/rate-limit";
 
 const schema = z.object({
-  email: z.email(),
-  password: z.string().min(8),
+  email: z.email().transform((value) => value.trim().toLowerCase()),
+  password: z
+    .string()
+    .min(8)
+    .regex(/[a-z]/)
+    .regex(/[A-Z]/)
+    .regex(/[\d\W_]/),
 });
 
 export async function POST(request: Request) {
+  // Rate limiting: 3 requests per minute
+  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
+  if (isRateLimited(`register:${ip}`, 3, 60 * 1000)) {
+    return NextResponse.json({ error: "Too many registration attempts. Try again later." }, { status: 429 });
+  }
+
   const parsed = schema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Use a valid email and a password with at least 8 characters." }, { status: 400 });
+    return NextResponse.json({ error: "Use a valid email and a stronger password." }, { status: 400 });
   }
 
   const supabase = getSupabaseServerClient();
@@ -27,11 +39,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error?.message ?? "Registration failed." }, { status: 400 });
   }
 
-  await supabase.from("users").upsert({
-    id: data.user.id,
-    email: data.user.email,
-    role: "customer",
-  });
+  // The database trigger 'handle_new_user' will now automatically create the 
+  // public.users record. We fetch the assigned role from there.
+  const { data: userData } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", data.user.id)
+    .single();
+
+  const role = userData?.role || "customer";
 
   if (data.session) {
     const cookieStore = await cookies();
@@ -51,5 +67,5 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ user: data.user });
+  return NextResponse.json({ user: data.user, role });
 }

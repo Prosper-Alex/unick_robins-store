@@ -1,0 +1,124 @@
+"use client";
+
+import { useState } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export interface UserRow {
+  id: string;
+  email: string;
+  role: string;
+  created_at: string;
+  orderCount: number;
+}
+
+export function UsersTable({ users }: { users: UserRow[] }) {
+  const [search, setSearch] = useState("");
+
+  const filteredUsers = users.filter((user) =>
+    user.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
+          <Input
+            placeholder="Search by email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+      
+      <div className="rounded-xl border border-stone-200 bg-white shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-stone-50/50 hover:bg-stone-50/50">
+              <TableHead className="font-semibold text-stone-900">Email</TableHead>
+              <TableHead className="font-semibold text-stone-900">Role</TableHead>
+              <TableHead className="font-semibold text-stone-900">Joined</TableHead>
+              <TableHead className="text-right font-semibold text-stone-900">Orders</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center text-stone-500">
+                  No users found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.email}</TableCell>
+                  <TableCell>
+                    <RoleSelect user={user} />
+                  </TableCell>
+                  <TableCell className="text-stone-500">
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {user.orderCount}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+import { updateUserRoleAction } from "@/src/actions/admin-users";
+import { Loader2 } from "lucide-react";
+
+function RoleSelect({ user }: { user: UserRow }) {
+  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState(user.role);
+
+  async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const newRole = e.target.value as "admin" | "customer";
+    setLoading(true);
+    try {
+      await updateUserRoleAction(user.id, newRole);
+      setRole(newRole);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update role");
+      // Revert select on error
+      e.target.value = role;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="relative inline-flex items-center">
+      <select
+        value={role}
+        onChange={handleChange}
+        disabled={loading}
+        className={`appearance-none rounded-full px-3 py-1 pr-8 text-xs font-medium capitalize outline-none transition-colors focus:ring-2 focus:ring-violet-500 disabled:opacity-50 ${
+          role === "admin"
+            ? "bg-stone-900 text-stone-50"
+            : "bg-stone-100 text-stone-800"
+        }`}
+      >
+        <option value="customer">Customer</option>
+        <option value="admin">Admin</option>
+      </select>
+      {loading && <Loader2 className="absolute right-2 size-3 animate-spin text-stone-400" />}
+    </div>
+  );
+}

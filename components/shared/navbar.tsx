@@ -70,8 +70,8 @@ export function Navbar() {
               <Search />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" className="rounded-full text-violet-50 hover:bg-white/10 hover:text-[#f6e7b7]" aria-label="Account login">
-            <Link href="/account/login">
+          <Button asChild variant="ghost" size="icon" className="rounded-full text-violet-50 hover:bg-white/10 hover:text-[#f6e7b7]" aria-label="Account dashboard">
+            <Link href="/account/dashboard">
               <UserRound />
             </Link>
           </Button>

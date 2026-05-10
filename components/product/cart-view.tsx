@@ -86,7 +86,9 @@ export function CartView() {
             <span>{formatCurrency(subtotal)}</span>
           </div>
         </div>
-        <Button className="mt-6 h-11 w-full rounded-full">Checkout</Button>
+        <Button asChild className="mt-6 w-full text-white" variant="secondary">
+          <Link href="/checkout">Checkout</Link>
+        </Button>
         <Button variant="ghost" className="mt-2 w-full" onClick={clearCart}>
           Clear cart
         </Button>
