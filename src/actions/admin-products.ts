@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
 import type { Product, ProductInput } from "@/src/types/product";
 
 async function verifyAdmin() {
-  const supabase = getSupabaseServerClient();
   const cookieStore = await cookies();
   const token = cookieStore.get(authCookieNames.access)?.value;
+  const supabase = token ? getAuthenticatedSupabaseServerClient(token) : null;
 
   if (!supabase || !token) {
     throw new Error("Unauthorized");
@@ -32,7 +33,14 @@ async function verifyAdmin() {
   return { supabase, user };
 }
 
-async function logAudit(supabase: any, adminId: string, action: string, entity: string, entityId: string | null, details: any = null) {
+async function logAudit(
+  supabase: SupabaseClient,
+  adminId: string,
+  action: string,
+  entity: string,
+  entityId: string | null,
+  details: Record<string, unknown> | null = null,
+) {
   await supabase.from("audit_logs").insert({
     admin_id: adminId,
     action,

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { authCookieNames, getAuthenticatedSupabaseServerClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
 import { isRateLimited } from "@/src/lib/rate-limit";
 
 const schema = z.object({
@@ -51,7 +51,13 @@ export async function POST(request: Request) {
   });
 
   // Fetch the role
-  const { data: userData } = await supabase
+  const authenticatedSupabase = getAuthenticatedSupabaseServerClient(data.session.access_token);
+
+  if (!authenticatedSupabase) {
+    return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
+  }
+
+  const { data: userData } = await authenticatedSupabase
     .from("users")
     .select("role")
     .eq("id", data.user.id)

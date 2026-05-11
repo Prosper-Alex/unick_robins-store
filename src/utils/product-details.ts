@@ -6,7 +6,7 @@ export function getProductSummary(product: Product) {
 
 export function getProductGallery(product: Product) {
   const gallery = product.gallery?.filter(Boolean) ?? [];
-  return [product.image, ...gallery.filter((image) => image !== product.image)].slice(0, 4);
+  return [product.image, ...gallery.filter((image) => image !== product.image)];
 }
 
 export function getHydrationLevel(product: Product) {
@@ -14,11 +14,11 @@ export function getHydrationLevel(product: Product) {
 }
 
 export function getRating(product: Product) {
-  return product.rating ?? 4.8;
+  return product.rating ?? 0;
 }
 
 export function getReviewCount(product: Product) {
-  return product.review_count ?? 124;
+  return product.review_count ?? 0;
 }
 
 export function isTransferReady(product: Product) {

@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  let response = NextResponse.next();
+  const response = NextResponse.next();
   let currentAccessToken = accessToken;
   let isValidSession = false;
 

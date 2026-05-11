@@ -2,8 +2,9 @@
 
 import { cookies } from "next/headers";
 import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import type { CartItem } from "@/src/store/cart-store";
 
-export async function createOrderAction(items: any[], total: number) {
+export async function createOrderAction(items: CartItem[], total: number) {
   const supabase = getSupabaseServerClient();
   const cookieStore = await cookies();
   const token = cookieStore.get(authCookieNames.access)?.value;

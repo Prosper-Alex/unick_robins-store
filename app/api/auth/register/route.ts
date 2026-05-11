@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { authCookieNames, getAuthenticatedSupabaseServerClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
 import { isRateLimited } from "@/src/lib/rate-limit";
 
 const schema = z.object({
@@ -39,17 +39,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error?.message ?? "Registration failed." }, { status: 400 });
   }
 
-  // The database trigger 'handle_new_user' will now automatically create the 
-  // public.users record. We fetch the assigned role from there.
-  const { data: userData } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  const role = userData?.role || "customer";
+  let role = "customer";
 
   if (data.session) {
+    const authenticatedSupabase = getAuthenticatedSupabaseServerClient(data.session.access_token);
+    const { data: userData } = authenticatedSupabase
+      ? await authenticatedSupabase
+          .from("users")
+          .select("role")
+          .eq("id", data.user.id)
+          .single()
+      : { data: null };
+
+    role = userData?.role || "customer";
+
     const cookieStore = await cookies();
     cookieStore.set(authCookieNames.access, data.session.access_token, {
       httpOnly: true,

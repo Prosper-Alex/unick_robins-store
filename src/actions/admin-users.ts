@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
 
 async function verifyAdmin() {
-  const supabase = getSupabaseServerClient();
   const cookieStore = await cookies();
   const token = cookieStore.get(authCookieNames.access)?.value;
+  const supabase = token ? getAuthenticatedSupabaseServerClient(token) : null;
 
   if (!supabase || !token) {
     throw new Error("Unauthorized");

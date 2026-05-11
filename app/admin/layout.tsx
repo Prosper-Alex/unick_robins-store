@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
@@ -11,7 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/account/login");
   }
 
-  const supabase = getSupabaseServerClient();
+  const supabase = getAuthenticatedSupabaseServerClient(token);
   
   if (!supabase) {
     redirect("/account/login");

@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Sparkles } from "lucide-react";
 import { AuthContainer } from "@/components/auth/auth-container";
 import { Footer } from "@/components/shared/footer";
 import { Navbar } from "@/components/shared/navbar";

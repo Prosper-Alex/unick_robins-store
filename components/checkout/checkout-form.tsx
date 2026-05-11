@@ -18,7 +18,7 @@ export function CheckoutForm() {
   const [successId, setSuccessId] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
   }, []);
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);

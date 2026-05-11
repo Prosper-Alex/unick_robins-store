@@ -22,6 +22,27 @@ export function getSupabaseServerClient() {
   return serverClient;
 }
 
+export function getAuthenticatedSupabaseServerClient(accessToken: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    return null;
+  }
+
+  return createClient(url, anonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  });
+}
+
 export const authCookieNames = {
   access: "ur-access-token",
   refresh: "ur-refresh-token",

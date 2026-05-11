@@ -25,7 +25,7 @@ create table if not exists public.products (
   hydration_level integer default 4 check (hydration_level between 1 and 5),
   transfer_ready boolean not null default true,
   complimentary_shipping boolean not null default false,
-  rating numeric(2, 1) not null default 4.8,
+  rating numeric(2, 1) not null default 0,
   review_count integer not null default 0,
   ingredients text[] default '{}',
   benefits text[] default '{}',
@@ -52,6 +52,9 @@ create table if not exists public.reviews (
   created_at timestamptz not null default now()
 );
 
+alter table public.products alter column rating set default 0;
+alter table public.products alter column review_count set default 0;
+
 create table if not exists public.wishlist (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.users(id) on delete cascade,
@@ -70,10 +73,17 @@ alter table public.wishlist enable row level security;
 drop policy if exists "Products are public" on public.products;
 drop policy if exists "Categories are public" on public.categories;
 drop policy if exists "Reviews are public" on public.reviews;
+drop policy if exists "Users can create reviews" on public.reviews;
+drop policy if exists "Users can update own reviews" on public.reviews;
+drop policy if exists "Users can delete own reviews" on public.reviews;
 drop policy if exists "Users read own profile" on public.users;
 drop policy if exists "Users insert own customer profile" on public.users;
+drop policy if exists "Admins can read users" on public.users;
+drop policy if exists "Admins can update users" on public.users;
 drop policy if exists "Wishlist own rows" on public.wishlist;
 drop policy if exists "Orders own rows" on public.orders;
+drop policy if exists "Admins can read orders" on public.orders;
+drop policy if exists "Admins can update orders" on public.orders;
 drop policy if exists "Admins can insert products" on public.products;
 drop policy if exists "Admins can update products" on public.products;
 drop policy if exists "Admins can delete products" on public.products;
@@ -85,11 +95,96 @@ drop policy if exists "Admins can delete product images" on storage.objects;
 create policy "Products are public" on public.products for select using (true);
 create policy "Categories are public" on public.categories for select using (true);
 create policy "Reviews are public" on public.reviews for select using (true);
+create policy "Users can create reviews" on public.reviews for insert
+with check (auth.uid() = user_id);
+create policy "Users can update own reviews" on public.reviews for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+create policy "Users can delete own reviews" on public.reviews for delete
+using (auth.uid() = user_id);
+
+create or replace function public.refresh_product_review_stats(target_product_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.products
+  set
+    rating = coalesce((
+      select round(avg(rating)::numeric, 1)
+      from public.reviews
+      where product_id = target_product_id
+    ), 0),
+    review_count = (
+      select count(*)
+      from public.reviews
+      where product_id = target_product_id
+    )
+  where id = target_product_id;
+end;
+$$;
+
+create or replace function public.handle_review_stats_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if tg_op = 'DELETE' then
+    perform public.refresh_product_review_stats(old.product_id);
+    return old;
+  end if;
+
+  perform public.refresh_product_review_stats(new.product_id);
+
+  if tg_op = 'UPDATE' and old.product_id <> new.product_id then
+    perform public.refresh_product_review_stats(old.product_id);
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_review_stats_changed on public.reviews;
+
+create trigger on_review_stats_changed
+after insert or update or delete on public.reviews
+for each row execute function public.handle_review_stats_change();
 
 create policy "Users read own profile" on public.users for select using (auth.uid() = id);
 create policy "Users insert own customer profile" on public.users for insert with check (auth.uid() = id and role = 'customer');
 create policy "Wishlist own rows" on public.wishlist for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Orders own rows" on public.orders for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.users
+    where id = auth.uid()
+    and role = 'admin'
+  );
+$$;
+
+create policy "Admins can read users" on public.users for select
+using (public.is_admin());
+
+create policy "Admins can update users" on public.users for update
+using (public.is_admin())
+with check (public.is_admin());
+
+create policy "Admins can read orders" on public.orders for select
+using (public.is_admin());
+
+create policy "Admins can update orders" on public.orders for update
+using (public.is_admin())
+with check (public.is_admin());
 
 create policy "Admins can insert products" on public.products for insert
 with check (
@@ -200,7 +295,7 @@ declare
 begin
   -- Check if the new user's email exists in our whitelist table
   select exists(
-    select 1 from public.admin_whitelist where email = new.email
+    select 1 from public.admin_whitelist where lower(email) = lower(new.email)
   ) into is_whitelisted;
 
   if is_whitelisted then

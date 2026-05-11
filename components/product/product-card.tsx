@@ -113,7 +113,7 @@ export function ProductCard({ product }: { product: Product }) {
                 />
               ))}
             </span>
-            <span>{rating.toFixed(1)} ({reviewCount})</span>
+            <span>{reviewCount > 0 ? `${rating.toFixed(1)} (${reviewCount})` : "No reviews yet"}</span>
           </div>
           <p className="line-clamp-2 min-h-10 text-sm leading-5 text-[#65526d]">
             {getProductSummary(product)}

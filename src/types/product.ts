@@ -32,8 +32,6 @@ export type ProductInput = {
   hydration_level?: number;
   transfer_ready?: boolean;
   complimentary_shipping?: boolean;
-  rating?: number;
-  review_count?: number;
   ingredients?: string[];
   benefits?: string[];
   usage_instructions?: string[];

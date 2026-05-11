@@ -20,7 +20,7 @@ export function UpdatePasswordForm() {
     // Supabase redirects to this page with the tokens in the URL hash fragment
     const hash = window.location.hash;
     if (!hash) {
-      setMessage("Invalid or missing password reset link.");
+      queueMicrotask(() => setMessage("Invalid or missing password reset link."));
       return;
     }
 
@@ -30,11 +30,11 @@ export function UpdatePasswordForm() {
     const type = hashParams.get("type");
 
     if (!access_token || type !== "recovery") {
-      setMessage("Invalid password reset link.");
+      queueMicrotask(() => setMessage("Invalid password reset link."));
       return;
     }
 
-    setTokens({ access_token, refresh_token: refresh_token || "" });
+    queueMicrotask(() => setTokens({ access_token, refresh_token: refresh_token || "" }));
   }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {

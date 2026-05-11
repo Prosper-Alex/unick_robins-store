@@ -1,11 +1,23 @@
 import { redirect } from "next/navigation";
-import { getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { cookies } from "next/headers";
+import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
 import { UsersTable, type UserRow } from "@/components/admin/users-table";
 
 export const dynamic = 'force-dynamic';
 
+type UserWithOrders = {
+  id: string;
+  email: string;
+  role: string;
+  created_at: string;
+  orders: Array<{ id: string }> | null;
+};
+
 export default async function AdminUsersPage() {
-  const supabase = getSupabaseServerClient();
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authCookieNames.access)?.value;
+  const supabase = token ? getAuthenticatedSupabaseServerClient(token) : null;
+
   if (!supabase) {
     redirect("/account/login");
   }
@@ -25,7 +37,7 @@ export default async function AdminUsersPage() {
     console.error("Error fetching users:", error);
   }
 
-  const formattedUsers: UserRow[] = (users || []).map((user: any) => ({
+  const formattedUsers: UserRow[] = ((users ?? []) as UserWithOrders[]).map((user) => ({
     id: user.id,
     email: user.email,
     role: user.role,

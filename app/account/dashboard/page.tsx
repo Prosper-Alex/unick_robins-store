@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { CreditCard, LogOut, Package, ShieldCheck, User } from "lucide-react";
 import { AccountShell } from "@/components/account/account-shell";
 import { OrderList } from "@/components/account/order-list";
@@ -16,7 +17,12 @@ export const metadata = {
 };
 
 export default async function DashboardPage() {
-  const { user, orders } = await getAccountOrders(3);
+  const { user, role, orders } = await getAccountOrders(3);
+
+  if (role === "admin") {
+    redirect("/admin");
+  }
+
   const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
   const latestOrder = orders[0];
 

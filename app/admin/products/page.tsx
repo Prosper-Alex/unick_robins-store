@@ -1,8 +1,8 @@
 import { ProductTable } from "@/components/admin/product-table";
-import { getProducts } from "@/src/services/products";
+import { getAdminStoreData } from "@/src/lib/admin-data";
 
 export default async function AdminProductsPage() {
-  const products = await getProducts();
+  const { products, productError } = await getAdminStoreData();
 
-  return <ProductTable products={products} />;
+  return <ProductTable products={products} dataError={productError} />;
 }

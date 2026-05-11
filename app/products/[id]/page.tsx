@@ -15,8 +15,10 @@ import { Navbar } from "@/components/shared/navbar";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductCard } from "@/components/product/product-card";
+import { ReviewForm } from "@/components/product/review-form";
 import { getProductById, getProducts } from "@/src/services/products";
-import { formatCurrency } from "@/src/utils/format";
+import { getProductReviews } from "@/src/services/reviews";
+import { formatCurrency, formatDate } from "@/src/utils/format";
 import {
   getBenefits,
   getHairCompatibility,
@@ -24,8 +26,6 @@ import {
   getIngredients,
   getProductGallery,
   getProductSummary,
-  getRating,
-  getReviewCount,
   getUsageInstructions,
   hasComplimentaryShipping,
   isTransferReady,
@@ -44,10 +44,13 @@ export default async function ProductDetailsPage({
   }
 
   const products = await getProducts();
+  const reviews = await getProductReviews(product.id);
   const related = products.filter((item) => item.id !== product.id).slice(0, 4);
   const bundle = products.filter((item) => item.id !== product.id).slice(0, 2);
-  const rating = getRating(product);
-  const reviewCount = getReviewCount(product);
+  const reviewCount = reviews.length;
+  const rating = reviewCount > 0
+    ? reviews.reduce((total, review) => total + review.rating, 0) / reviewCount
+    : 0;
 
   return (
     <>
@@ -81,7 +84,7 @@ export default async function ProductDetailsPage({
                   />
                 ))}
               </span>
-              <span>{rating.toFixed(1)} rating</span>
+              <span>{reviewCount > 0 ? `${rating.toFixed(1)} rating` : "No ratings yet"}</span>
               <span>{reviewCount} reviews</span>
             </div>
             <p className="mt-5 text-lg leading-8 text-violet-100">
@@ -182,32 +185,37 @@ export default async function ProductDetailsPage({
               Reviews
             </p>
             <h2 className="mt-3 text-2xl font-normal leading-[1.1] tracking-tight text-[#fff8df] sm:text-3xl">
-              Customers call it ritual-worthy.
+              Customer ratings
             </h2>
             <p className="mt-4 text-violet-100">
-              {rating.toFixed(1)} average from {reviewCount} verified reviews.
+              {reviewCount > 0
+                ? `${rating.toFixed(1)} average from ${reviewCount} customer review${reviewCount === 1 ? "" : "s"}.`
+                : "Be the first to rate this product."}
             </p>
           </div>
           <div className="grid gap-4">
-            {[
-              "Left my silk press soft without feeling coated.",
-              "The scent feels expensive and the shine lasts.",
-              "Finally a premium formula that works on my protective styles.",
-            ].map((review, index) => (
-              <article
-                key={review}
-                className="rounded-3xl border border-white/10 bg-white/10 p-5 text-violet-50">
-                <div className="mb-3 flex text-[#f6d87f]">
-                  {Array.from({ length: 5 }).map((_, star) => (
-                    <Star key={star} className="size-4 fill-current" />
-                  ))}
-                </div>
-                <p className="leading-7">{review}</p>
-                <p className="mt-4 text-sm text-violet-200">
-                  Verified customer {index + 1}
-                </p>
-              </article>
-            ))}
+            <ReviewForm productId={product.id} />
+            {reviews.length > 0 ? (
+              reviews.map((review) => (
+                <article
+                  key={review.id}
+                  className="rounded-3xl border border-white/10 bg-white/10 p-5 text-violet-50">
+                  <div className="mb-3 flex text-[#f6d87f]">
+                    {Array.from({ length: 5 }).map((_, star) => (
+                      <Star key={star} className={`size-4 ${star < review.rating ? "fill-current" : ""}`} />
+                    ))}
+                  </div>
+                  <p className="leading-7">{review.body}</p>
+                  <p className="mt-4 text-sm text-violet-200">
+                    Customer review on {formatDate(review.created_at)}
+                  </p>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-3xl border border-dashed border-white/15 bg-white/5 p-6 text-violet-100">
+                No reviews have been posted for this product yet.
+              </div>
+            )}
           </div>
         </section>
 

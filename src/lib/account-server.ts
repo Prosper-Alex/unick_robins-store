@@ -23,6 +23,7 @@ export type AccountOrder = {
 type AccountContext = {
   supabase: SupabaseClient;
   user: User;
+  role: string;
 };
 
 export async function getAccountContext(): Promise<AccountContext> {
@@ -61,11 +62,17 @@ export async function getAccountContext(): Promise<AccountContext> {
     redirect("/account/login");
   }
 
-  return { supabase, user };
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  return { supabase, user, role: profile?.role ?? "customer" };
 }
 
 export async function getAccountOrders(limit?: number) {
-  const { supabase, user } = await getAccountContext();
+  const { supabase, user, role } = await getAccountContext();
   let query = supabase
     .from("orders")
     .select("id,user_id,status,total,items,created_at")
@@ -79,17 +86,18 @@ export async function getAccountOrders(limit?: number) {
   const { data, error } = await query;
 
   if (error || !data) {
-    return { user, orders: [] as AccountOrder[] };
+    return { user, role, orders: [] as AccountOrder[] };
   }
 
   return {
     user,
+    role,
     orders: data.map(normalizeOrder),
   };
 }
 
 export async function getAccountOrder(id: string) {
-  const { supabase, user } = await getAccountContext();
+  const { supabase, user, role } = await getAccountContext();
   const { data, error } = await supabase
     .from("orders")
     .select("id,user_id,status,total,items,created_at")
@@ -98,10 +106,10 @@ export async function getAccountOrder(id: string) {
     .single();
 
   if (error || !data) {
-    return { user, order: null };
+    return { user, role, order: null };
   }
 
-  return { user, order: normalizeOrder(data) };
+  return { user, role, order: normalizeOrder(data) };
 }
 
 function normalizeOrder(order: {
