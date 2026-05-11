@@ -47,13 +47,16 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="grid gap-8">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#9a7734]">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 shadow-xl shadow-black/20">
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d6b25e]">
           Directory
         </p>
-        <h1 className="mt-2 text-3xl font-normal leading-[1.1] tracking-tight sm:text-4xl">
+        <h1 className="mt-2 text-3xl font-semibold leading-[1.1] tracking-tight text-white sm:text-4xl">
           User management
         </h1>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-violet-100/70">
+          Review customer activity and control admin access from one place.
+        </p>
       </div>
       <UsersTable users={formattedUsers} />
     </div>

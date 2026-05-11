@@ -61,14 +61,14 @@ export function UpdatePasswordForm() {
         }),
       });
       
-      const result = await response.json() as { error?: string };
+      const result = await response.json() as { error?: string; role?: string };
 
       if (!response.ok) {
         setMessage(result.error ?? "Failed to update password.");
         return;
       }
 
-      router.replace("/products");
+      router.replace(result.role === "admin" ? "/admin" : "/account/dashboard");
     } catch {
       setMessage("Network error. Check your connection and try again.");
     } finally {

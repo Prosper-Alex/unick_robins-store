@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { BarChart3, Boxes, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MobileNavToggle } from "@/components/shared/mobile-nav-toggle";
 
 const items = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -16,6 +17,14 @@ const items = [
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const mobileLinks = items.map((item) => {
+    const Icon = item.icon;
+    return {
+      href: item.href,
+      label: item.label,
+      icon: <Icon className="size-4" />,
+    };
+  });
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -23,10 +32,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f4ef] text-stone-950">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-stone-200 bg-white px-5 py-6 lg:block">
+    <div className="min-h-screen bg-[#13091d] text-[#f8f3e7]">
+      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-white/10 bg-[#1a0824] px-5 py-6 shadow-2xl shadow-black/30 lg:block">
         <Link href="/admin" className="flex items-center gap-2">
-          <span className="relative size-9 overflow-hidden rounded-full bg-stone-950 ring-1 ring-stone-200">
+          <span className="relative size-9 overflow-hidden rounded-full bg-[#f6e7b7] ring-1 ring-[#d6b25e]/50">
             <Image
               src="/favicon.jpg"
               alt=""
@@ -35,8 +44,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               className="object-cover"
             />
           </span>
-          <span className="text-lg font-semibold">Unick Admin</span>
+          <span className="text-lg font-semibold text-white">Unick Admin</span>
         </Link>
+        <div className="mt-6 rounded-2xl border border-[#d6b25e]/20 bg-white/[0.06] p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d6b25e]">Control room</p>
+          <p className="mt-2 text-sm leading-5 text-violet-100/80">Catalog, orders, and customer operations.</p>
+        </div>
         <nav className="mt-10 grid gap-2">
           {items.map((item) => {
             const Icon = item.icon;
@@ -46,7 +59,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                  active ? "bg-stone-950 text-white" : "text-stone-600 hover:bg-stone-100 hover:text-stone-950"
+                  active ? "bg-[#d6b25e] text-[#24102f] shadow-lg shadow-black/20" : "text-violet-100/70 hover:bg-white/[0.08] hover:text-white"
                 }`}
               >
                 <Icon className="size-4" />
@@ -55,40 +68,35 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <Button variant="outline" className="absolute bottom-6 left-5 right-5" onClick={logout}>
+        <Button variant="outline" className="absolute bottom-6 left-5 right-5 border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" onClick={logout}>
           <LogOut /> Logout
         </Button>
       </aside>
-      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/90 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#1a0824]/90 px-4 py-3 text-white backdrop-blur lg:hidden">
         <div className="flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-2 font-semibold">
-            <span className="relative size-8 overflow-hidden rounded-full bg-stone-950">
+            <span className="relative size-8 overflow-hidden rounded-full bg-[#f6e7b7]">
               <Image src="/favicon.jpg" alt="" fill sizes="32px" className="object-cover" />
             </span>
             Unick Admin
           </Link>
-          <Button variant="outline" size="icon" aria-label="Logout" onClick={logout}>
-            <LogOut className="size-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" aria-label="Logout" className="border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" onClick={logout}>
+              <LogOut className="size-4" />
+            </Button>
+            <MobileNavToggle
+              links={mobileLinks}
+              title="Unick Admin"
+              description="Move through admin pages and operational tools."
+              footer={
+                <Button variant="outline" className="border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" onClick={logout}>
+                  <LogOut />
+                  Logout
+                </Button>
+              }
+            />
+          </div>
         </div>
-        <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-medium ${
-                  active ? "bg-stone-950 text-white" : "bg-stone-100 text-stone-700"
-                }`}
-              >
-                <Icon className="size-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
       </header>
       <main className="lg:pl-72">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>

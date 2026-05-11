@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { authCookieNames, getAuthenticatedSupabaseServerClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
 
 const schema = z.object({
   password: z
@@ -48,6 +48,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: updateError?.message ?? "Failed to update password." }, { status: 400 });
   }
 
+  let role = "customer";
+
   // Set the new secure cookies so they are immediately logged in
   if (sessionData.session) {
     const cookieStore = await cookies();
@@ -68,7 +70,19 @@ export async function POST(request: Request) {
         maxAge: 60 * 60 * 24 * 30, // 30 days
       });
     }
+
+    const authenticatedSupabase = getAuthenticatedSupabaseServerClient(sessionData.session.access_token);
+
+    if (authenticatedSupabase) {
+      const { data: userData } = await authenticatedSupabase
+        .from("users")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      role = userData?.role ?? role;
+    }
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, role });
 }

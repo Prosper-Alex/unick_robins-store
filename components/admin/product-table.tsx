@@ -54,12 +54,13 @@ export function ProductTable({
     <div className="grid gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold leading-[1.1]">Products</h1>
-          <p className="mt-1 text-sm text-stone-500">Create, preview, edit, and retire live catalog items.</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#d6b25e]">Catalog</p>
+          <h1 className="mt-2 text-3xl font-semibold leading-[1.1] text-white">Products</h1>
+          <p className="mt-2 text-sm text-violet-100/65">Create, preview, edit, and retire live catalog items.</p>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button className="rounded-full">
+            <Button className="rounded-full bg-[#d6b25e] text-[#24102f] hover:bg-[#f6e7b7]">
               <Plus /> Add product
             </Button>
           </DialogTrigger>
@@ -78,62 +79,62 @@ export function ProductTable({
         </Dialog>
       </div>
 
-      {dataError && <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{dataError}</p>}
+      {dataError && <p className="rounded-xl bg-[#d6b25e]/15 px-4 py-3 text-sm text-[#f6e7b7] ring-1 ring-[#d6b25e]/25">{dataError}</p>}
       {message && (
-        <p className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <p className="flex items-center gap-2 rounded-xl bg-emerald-400/10 px-4 py-3 text-sm text-emerald-200 ring-1 ring-emerald-300/20">
           <CheckCircle2 className="size-4" />
           {message}
         </p>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] text-white shadow-xl shadow-black/20 backdrop-blur">
         {products.length > 0 ? (
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead>Posted</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="border-white/10 hover:bg-white/[0.04]">
+                <TableHead className="text-violet-100/70">Product</TableHead>
+                <TableHead className="text-violet-100/70">Category</TableHead>
+                <TableHead className="text-violet-100/70">Price</TableHead>
+                <TableHead className="text-violet-100/70">Stock</TableHead>
+                <TableHead className="text-violet-100/70">Posted</TableHead>
+                <TableHead className="text-violet-100/70">Status</TableHead>
+                <TableHead className="text-right text-violet-100/70">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {products.map((product) => (
-                <TableRow key={product.id}>
+                <TableRow key={product.id} className="border-white/10 hover:bg-white/[0.04]">
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="size-14 overflow-hidden rounded-lg bg-stone-100 ring-1 ring-stone-200">
+                      <div className="size-14 overflow-hidden rounded-lg bg-[#24102f] ring-1 ring-white/10">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
                       </div>
                       <div>
                         <p className="font-medium">{product.title}</p>
-                        <p className="max-w-md truncate text-xs text-stone-500">{product.short_description ?? product.description}</p>
+                        <p className="max-w-md truncate text-xs text-violet-100/55">{product.short_description ?? product.description}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell>{formatCurrency(product.price)}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>{formatDate(product.created_at)}</TableCell>
+                  <TableCell className="font-mono">{formatCurrency(product.price)}</TableCell>
+                  <TableCell className="font-mono">{product.stock}</TableCell>
+                  <TableCell className="text-violet-100/60">{formatDate(product.created_at)}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1 text-xs">
-                      <span className={`rounded-full px-2 py-1 ${product.stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+                      <span className={`rounded-full px-2 py-1 ${product.stock > 0 ? "bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-300/20" : "bg-rose-400/10 text-rose-200 ring-1 ring-rose-300/20"}`}>
                         {product.stock > 0 ? "Live" : "Out of stock"}
                       </span>
-                      <span className="rounded-full bg-stone-100 px-2 py-1">Hydration {product.hydration_level ?? 4}/5</span>
-                      {product.transfer_ready && <span className="rounded-full bg-stone-100 px-2 py-1">Transfer</span>}
-                      {product.complimentary_shipping && <span className="rounded-full bg-stone-100 px-2 py-1">Shipping</span>}
+                      <span className="rounded-full bg-white/[0.08] px-2 py-1 text-violet-100/75 ring-1 ring-white/10">Hydration {product.hydration_level ?? 4}/5</span>
+                      {product.transfer_ready && <span className="rounded-full bg-white/[0.08] px-2 py-1 text-violet-100/75 ring-1 ring-white/10">Transfer</span>}
+                      {product.complimentary_shipping && <span className="rounded-full bg-white/[0.08] px-2 py-1 text-violet-100/75 ring-1 ring-white/10">Shipping</span>}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="icon" aria-label={`Edit ${product.title}`}>
+                          <Button variant="outline" size="icon" className="border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" aria-label={`Edit ${product.title}`}>
                             <Pencil />
                           </Button>
                         </DialogTrigger>
@@ -163,14 +164,14 @@ export function ProductTable({
           </Table>
         ) : (
           <div className="grid justify-items-center gap-3 px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-stone-100">
-              <Plus className="size-5 text-stone-500" />
+            <div className="flex size-12 items-center justify-center rounded-xl bg-[#d6b25e]/15 ring-1 ring-[#d6b25e]/25">
+              <Plus className="size-5 text-[#f6e7b7]" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-stone-950">No products yet</h2>
-              <p className="mt-1 max-w-md text-sm text-stone-500">Upload your first product image, fill the product details, and publish it to the store.</p>
+              <h2 className="text-lg font-semibold text-white">No products yet</h2>
+              <p className="mt-1 max-w-md text-sm text-violet-100/60">Upload your first product image, fill the product details, and publish it to the store.</p>
             </div>
-            <Button className="rounded-full" onClick={() => setCreateOpen(true)}>
+            <Button className="rounded-full bg-[#d6b25e] text-[#24102f] hover:bg-[#f6e7b7]" onClick={() => setCreateOpen(true)}>
               <Plus />
               Add product
             </Button>

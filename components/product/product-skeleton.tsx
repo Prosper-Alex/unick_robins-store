@@ -1,33 +1,33 @@
 export function ProductSkeleton() {
   return (
-    <div className="grid w-full gap-10">
-      <div className="flex w-full flex-col gap-4 rounded-2xl border border-white/10 bg-white/96 p-4 shadow-sm shadow-black/10 md:flex-row md:items-center md:justify-between">
-        <div className="skeleton-shimmer h-11 w-full rounded-full bg-violet-100 md:w-80" />
-        <div className="flex gap-2 overflow-hidden">
+    <div className="grid w-full gap-6 sm:gap-8 lg:gap-10">
+      <div className="grid w-full gap-3 rounded-2xl border border-white/10 bg-[#181818] p-3 shadow-xl shadow-black/25 sm:p-4 md:grid-cols-[minmax(0,20rem)_1fr] md:items-center">
+        <div className="skeleton-shimmer h-10 w-full rounded-full bg-[#2a2a2a] sm:h-11" />
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:overflow-hidden">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
-              className="skeleton-shimmer h-9 w-24 shrink-0 rounded-full bg-violet-100"
+              className="skeleton-shimmer h-8 w-full shrink-0 rounded-full bg-[#2a2a2a] sm:h-9 sm:w-24"
             />
           ))}
         </div>
       </div>
 
-      <div className="grid w-full grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-12">
+      <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-12">
         {Array.from({ length: 8 }).map((_, index) => (
           <div
             key={index}
-            className="h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-white/97 shadow-sm shadow-black/10">
-            <div className="skeleton-shimmer aspect-4/5 bg-violet-100" />
-            <div className="grid gap-4 p-5">
+            className={`h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-[#181818] shadow-xl shadow-black/25 ${index >= 4 ? "hidden sm:block" : ""}`}>
+            <div className="skeleton-shimmer aspect-[16/11] bg-[#2a2a2a] sm:aspect-4/5" />
+            <div className="grid gap-3 p-4 sm:gap-4 sm:p-5">
               <div className="grid gap-2">
-                <div className="skeleton-shimmer h-5 w-4/5 rounded bg-violet-100" />
-                <div className="skeleton-shimmer h-4 w-full rounded bg-violet-100" />
-                <div className="skeleton-shimmer h-4 w-2/3 rounded bg-violet-100" />
+                <div className="skeleton-shimmer h-5 w-4/5 rounded bg-[#303030]" />
+                <div className="skeleton-shimmer h-4 w-full rounded bg-[#2a2a2a]" />
+                <div className="skeleton-shimmer h-4 w-2/3 rounded bg-[#2a2a2a]" />
               </div>
               <div className="flex items-center justify-between gap-3">
-                <div className="skeleton-shimmer h-7 w-20 rounded bg-violet-100" />
-                <div className="skeleton-shimmer h-8 w-24 rounded-full bg-[#efe0ad]" />
+                <div className="skeleton-shimmer h-7 w-20 rounded bg-[#303030]" />
+                <div className="skeleton-shimmer h-8 w-24 rounded-full bg-[#3a3a3a]" />
               </div>
             </div>
           </div>
