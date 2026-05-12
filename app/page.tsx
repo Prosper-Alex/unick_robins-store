@@ -48,7 +48,7 @@ export default async function Home() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-12 rounded-full border-white/30 bg-white/10 px-6 text-white hover:bg-white hover:text-[#24102f] sm:px-7">
-                  <Link href="/products?category=Growth%20Oils">Explore oils</Link>
+                  <Link href="/products?category=Hair%20Oil">Explore hair oils</Link>
                 </Button>
               </div>
             </div>

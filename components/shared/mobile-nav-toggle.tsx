@@ -47,14 +47,14 @@ export function MobileNavToggle({
           variant="ghost"
           size="icon"
           className={cn(
-            "group rounded-full border border-white/10 bg-white/6 text-violet-50 hover:bg-white/10 hover:text-[#f6e7b7]",
+            "group rounded-full border border-white/15 bg-[#f6e7b7]/12 text-[#fff8df] shadow-sm shadow-black/20 hover:border-[#d6b25e]/50 hover:bg-[#f6e7b7]/20 hover:text-[#fff8df] data-[state=open]:border-[#d6b25e]/60 data-[state=open]:bg-[#d6b25e] data-[state=open]:text-[#24102f]",
             className,
           )}
           aria-label="Open navigation">
           <span className="relative block size-5" aria-hidden="true">
-            <span className="absolute left-0 top-1 h-0.5 w-5 rounded-full bg-current transition duration-200 group-data-[state=open]:top-1/2 group-data-[state=open]:-translate-y-1/2 group-data-[state=open]:rotate-45" />
-            <span className="absolute left-0 top-1/2 h-0.5 w-5 -translate-y-1/2 rounded-full bg-current transition duration-200 group-data-[state=open]:translate-x-2 group-data-[state=open]:opacity-0" />
-            <span className="absolute bottom-1 left-0 h-0.5 w-5 rounded-full bg-current transition duration-200 group-data-[state=open]:bottom-auto group-data-[state=open]:top-1/2 group-data-[state=open]:-translate-y-1/2 group-data-[state=open]:-rotate-45" />
+            <span className="absolute left-0 top-1 h-0.5 w-5 rounded-full bg-current opacity-100 transition duration-200 group-hover:opacity-100 group-data-[state=open]:top-1/2 group-data-[state=open]:-translate-y-1/2 group-data-[state=open]:rotate-45" />
+            <span className="absolute left-0 top-1/2 h-0.5 w-5 -translate-y-1/2 rounded-full bg-current opacity-100 transition duration-200 group-hover:opacity-100 group-data-[state=open]:translate-x-2 group-data-[state=open]:opacity-0" />
+            <span className="absolute bottom-1 left-0 h-0.5 w-5 rounded-full bg-current opacity-100 transition duration-200 group-hover:opacity-100 group-data-[state=open]:bottom-auto group-data-[state=open]:top-1/2 group-data-[state=open]:-translate-y-1/2 group-data-[state=open]:-rotate-45" />
           </span>
         </Button>
       </SheetTrigger>
@@ -88,6 +88,7 @@ export function MobileNavToggle({
               <SheetClose key={link.href} asChild>
                 <Link
                   href={link.href}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
                     "animate-fade-up flex items-center gap-3 rounded-2xl px-3 py-3 text-base font-medium text-violet-100 transition duration-200 hover:bg-white/10 hover:text-[#f6e7b7]",
                     active &&
@@ -99,7 +100,12 @@ export function MobileNavToggle({
                       {link.icon}
                     </span>
                   )}
-                  {link.label}
+                  <span className="flex-1">{link.label}</span>
+                  {active && (
+                    <span className="rounded-full bg-[#24102f]/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em]">
+                      Current
+                    </span>
+                  )}
                 </Link>
               </SheetClose>
             );

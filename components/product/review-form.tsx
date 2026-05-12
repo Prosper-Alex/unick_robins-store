@@ -7,6 +7,7 @@ import { createReviewAction } from "@/src/actions/reviews";
 
 export function ReviewForm({ productId }: { productId: string }) {
   const [rating, setRating] = useState(5);
+  const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -17,10 +18,11 @@ export function ReviewForm({ productId }: { productId: string }) {
     setMessage(null);
 
     try {
-      await createReviewAction({ productId, rating, body });
+      await createReviewAction({ productId, title, rating, body });
+      setTitle("");
       setBody("");
       setRating(5);
-      setMessage("Review posted.");
+      setMessage("Review saved. It is now visible on this product.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Review could not be posted.");
     } finally {
@@ -29,10 +31,13 @@ export function ReviewForm({ productId }: { productId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-3xl border border-white/10 bg-white/10 p-5 text-violet-50">
+    <form onSubmit={submit} className="rounded-3xl border border-white/10 bg-white/10 p-4 text-violet-50 shadow-xl shadow-black/10 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-[#fff8df]">Rate this product</h3>
-        <div className="flex gap-1 text-[#f6d87f]">
+        <div>
+          <h3 className="text-lg font-semibold text-[#fff8df]">Rate this product</h3>
+          <p className="mt-1 text-sm text-violet-100/70">Signed-in customers can post one review per product.</p>
+        </div>
+        <div className="flex shrink-0 gap-1 text-[#f6d87f]">
           {Array.from({ length: 5 }).map((_, index) => {
             const value = index + 1;
             return (
@@ -49,6 +54,13 @@ export function ReviewForm({ productId }: { productId: string }) {
           })}
         </div>
       </div>
+      <input
+        value={title}
+        onChange={(event) => setTitle(event.target.value)}
+        maxLength={80}
+        className="mt-4 h-12 w-full rounded-2xl border border-white/10 bg-white px-4 text-sm text-[#24102f] outline-none transition placeholder:text-stone-400 focus-visible:ring-2 focus-visible:ring-[#f6d87f]"
+        placeholder="Short title, e.g. Perfect for dry ends"
+      />
       <textarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
@@ -58,10 +70,14 @@ export function ReviewForm({ productId }: { productId: string }) {
         className="mt-4 min-h-28 w-full rounded-2xl border border-white/10 bg-white px-4 py-3 text-sm text-[#24102f] outline-none transition focus-visible:ring-2 focus-visible:ring-[#f6d87f]"
         placeholder="Share what changed after using it..."
       />
+      <div className="mt-2 flex justify-between gap-3 text-xs text-violet-100/60">
+        <span>Minimum 8 characters</span>
+        <span>{body.length}/600</span>
+      </div>
       {message && <p className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-sm">{message}</p>}
-      <Button className="mt-4 rounded-full" disabled={submitting}>
+      <Button className="mt-4 w-full rounded-full sm:w-auto" disabled={submitting}>
         {submitting ? <Loader2 className="animate-spin" /> : <Send />}
-        Post review
+        Save review
       </Button>
     </form>
   );

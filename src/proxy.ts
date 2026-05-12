@@ -20,7 +20,7 @@ export async function proxy(request: NextRequest) {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const response = NextResponse.next();
+  let response = NextResponse.next();
   let currentAccessToken = accessToken;
   let isValidSession = false;
 
@@ -33,14 +33,23 @@ export async function proxy(request: NextRequest) {
 
   // Attempt refresh if access token is invalid but refresh token exists
   if (!isValidSession && refreshToken) {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: "", // Required by SDK even if empty
+    const { data, error } = await supabase.auth.refreshSession({
       refresh_token: refreshToken,
     });
 
     if (!error && data.session) {
       currentAccessToken = data.session.access_token;
       isValidSession = true;
+
+      const requestHeaders = new Headers(request.headers);
+      request.cookies.set(accessCookie, data.session.access_token);
+      request.cookies.set(refreshCookie, data.session.refresh_token);
+      requestHeaders.set("cookie", request.cookies.toString());
+      response = NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
       
       // Update cookies
       response.cookies.set(accessCookie, data.session.access_token, {
@@ -51,15 +60,13 @@ export async function proxy(request: NextRequest) {
         maxAge: data.session.expires_in,
       });
       
-      if (data.session.refresh_token) {
-        response.cookies.set(refreshCookie, data.session.refresh_token, {
-          httpOnly: true,
-          sameSite: "lax",
-          secure: process.env.NODE_ENV === "production",
-          path: "/",
-          maxAge: 60 * 60 * 24 * 30, // 30 days
-        });
-      }
+      response.cookies.set(refreshCookie, data.session.refresh_token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
     } else {
       // Refresh failed, clear session
       response.cookies.delete(accessCookie);
@@ -73,7 +80,15 @@ export async function proxy(request: NextRequest) {
       return redirectToLogin(request, response);
     }
 
-    const roleResponse = await fetch(`${url}/rest/v1/users?id=eq.${(await supabase.auth.getUser(currentAccessToken)).data.user?.id}&select=role`, {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser(currentAccessToken);
+
+    if (!user) {
+      return redirectToLogin(request, response);
+    }
+
+    const roleResponse = await fetch(`${url}/rest/v1/users?id=eq.${user.id}&select=role`, {
       headers: {
         apikey: anonKey,
         Authorization: `Bearer ${currentAccessToken}`,

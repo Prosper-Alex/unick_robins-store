@@ -16,8 +16,8 @@ export function AddToCartButton({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
-      <div className="flex h-12 w-fit items-center rounded-full border border-white/15 bg-white/10 px-2 text-white">
+    <div className="grid gap-3 sm:inline-grid sm:grid-cols-[auto_auto]">
+      <div className="flex h-12 w-full items-center justify-between rounded-full border border-white/15 bg-white/10 px-2 text-white sm:w-fit">
         <Button
           type="button"
           variant="ghost"

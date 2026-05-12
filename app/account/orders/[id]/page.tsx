@@ -92,9 +92,51 @@ export default async function OrderDetailsPage({
             )}
           </div>
 
-          <div className="flex justify-between border-t border-stone-100 pt-5 text-lg font-medium">
-            <span>Total</span>
-            <span>{formatCurrency(order.total)}</span>
+          <div className="grid gap-5 border-t border-stone-100 pt-5 lg:grid-cols-2">
+            <div className="rounded-2xl bg-stone-50 p-4">
+              <h2 className="font-medium">Delivery details</h2>
+              <div className="mt-3 grid gap-1 text-sm leading-6 text-stone-600">
+                <p>{order.customer_name ?? "Customer"}</p>
+                {order.customer_phone && <p>{order.customer_phone}</p>}
+                {order.customer_email && <p>{order.customer_email}</p>}
+                {order.shipping_address ? (
+                  <p>
+                    {[
+                      order.shipping_address.address,
+                      order.shipping_address.city,
+                      order.shipping_address.state,
+                      order.shipping_address.country,
+                      order.shipping_address.postalCode,
+                    ].filter(Boolean).join(", ")}
+                  </p>
+                ) : null}
+                {order.delivery_method && <p className="capitalize">Delivery: {order.delivery_method}</p>}
+                {order.tracking_number && <p>Tracking: {order.tracking_number}</p>}
+              </div>
+            </div>
+            <div className="rounded-2xl bg-stone-50 p-4">
+              <h2 className="font-medium">Payment</h2>
+              <div className="mt-3 grid gap-2 text-sm text-stone-600">
+                <div className="flex justify-between gap-4">
+                  <span>Status</span>
+                  <span className="capitalize">{order.payment_status.replaceAll("_", " ")}</span>
+                </div>
+                {order.payment_reference && (
+                  <div className="flex justify-between gap-4">
+                    <span>Reference</span>
+                    <span className="font-mono text-xs">{order.payment_reference}</span>
+                  </div>
+                )}
+                <div className="flex justify-between gap-4">
+                  <span>Shipping</span>
+                  <span>{order.shipping_fee > 0 ? formatCurrency(order.shipping_fee) : "Free"}</span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-stone-200 pt-3 text-lg font-medium text-[#24102f]">
+                  <span>Total</span>
+                  <span>{formatCurrency(order.total)}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </div>

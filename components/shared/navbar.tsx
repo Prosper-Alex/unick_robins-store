@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   History,
   Home,
-  KeyRound,
   Search,
   ShoppingBag,
   Store,
@@ -17,14 +16,17 @@ import { MobileNavToggle } from "@/components/shared/mobile-nav-toggle";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/src/store/cart-store";
 
-const links = [
+const primaryLinks = [
   { href: "/", label: "Home", icon: <Home className="size-4" /> },
   { href: "/products", label: "Shop", icon: <Store className="size-4" /> },
   {
-    href: "/products?category=Growth%20Oils",
-    label: "Growth Oils",
+    href: "/products?category=Hair%20Oil",
+    label: "Hair Oil",
     icon: <Search className="size-4" />,
   },
+];
+
+const accountLinks = [
   {
     href: "/account/dashboard",
     label: "Account",
@@ -35,11 +37,6 @@ const links = [
     label: "Orders",
     icon: <History className="size-4" />,
   },
-  {
-    href: "/account/update-password",
-    label: "Password",
-    icon: <KeyRound className="size-4" />,
-  },
 ];
 
 export function Navbar() {
@@ -47,9 +44,18 @@ export function Navbar() {
   const count = useCartStore((state) =>
     state.items.reduce((total, item) => total + item.quantity, 0),
   );
+  const mobileLinks = [
+    ...primaryLinks,
+    {
+      href: "/cart",
+      label: count > 0 ? `Cart (${count})` : "Cart",
+      icon: <ShoppingBag className="size-4" />,
+    },
+    ...accountLinks,
+  ];
 
   return (
-    <header className="sticky top-0 z-100 isolate bg-[#1a0824]/80 px-3 py-3 text-white shadow-lg shadow-black/10 backdrop-blur-2xl sm:px-4">
+    <header className="sticky top-0 z-100 isolate bg-[#1a0824]/84 px-3 py-3 text-white shadow-lg shadow-black/10 backdrop-blur-2xl sm:px-4">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between rounded-full border border-white/10 bg-white/8 px-3 shadow-sm shadow-black/20 ring-1 ring-white/5 sm:px-4 lg:px-5">
         <Link
           href="/"
@@ -65,21 +71,30 @@ export function Navbar() {
               priority
             />
           </span>
-          <span className="font-heading text-lg font-semibold tracking-[0.18em] text-white">
-            UNICK
+          <span className="min-w-0 leading-none">
+            <span className="block font-heading text-base font-semibold tracking-[0.18em] text-white sm:text-lg">
+              UNICK
+            </span>
+            <span className="hidden text-[11px] font-medium uppercase tracking-[0.18em] text-violet-100/55 sm:block">
+              Robins Store
+            </span>
           </span>
         </Link>
 
         <nav className="hidden items-center gap-1 rounded-full border border-white/10 bg-[#16071f]/35 p-1 text-sm font-medium text-violet-100 md:flex">
-          {links.slice(0, 3).map((link) => (
+          {primaryLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
+              aria-current={
+                isActivePath(pathname, link.href) ? "page" : undefined
+              }
               className={cn(
-                "rounded-full px-4 py-2 transition hover:bg-white/10 hover:text-[#f6e7b7]",
+                "inline-flex items-center gap-2 rounded-full px-4 py-2 transition hover:bg-white/10 hover:text-[#f6e7b7]",
                 isActivePath(pathname, link.href) &&
                   "bg-white/12 text-[#f6e7b7] shadow-sm shadow-black/10",
               )}>
+              {link.icon}
               {link.label}
             </Link>
           ))}
@@ -90,7 +105,7 @@ export function Navbar() {
             asChild
             variant="ghost"
             size="icon"
-            className="rounded-full text-violet-50 hover:bg-white/10 hover:text-[#f6e7b7]"
+            className="hidden rounded-full text-violet-50 hover:bg-white/10 hover:text-[#f6e7b7] sm:inline-flex"
             aria-label="Search products">
             <Link href="/products">
               <Search />
@@ -100,7 +115,11 @@ export function Navbar() {
             asChild
             variant="ghost"
             size="icon"
-            className="rounded-full text-violet-50 hover:bg-white/10 hover:text-[#f6e7b7]"
+            className={cn(
+              "hidden rounded-full text-violet-50 hover:bg-white/10 hover:text-[#f6e7b7] sm:inline-flex",
+              isActivePath(pathname, "/account/dashboard") &&
+                "bg-white/12 text-[#f6e7b7]",
+            )}
             aria-label="Account dashboard">
             <Link href="/account/dashboard">
               <UserRound />
@@ -123,14 +142,76 @@ export function Navbar() {
           </Button>
 
           <MobileNavToggle
-            links={links}
+            links={mobileLinks}
             title="UNICK"
-            description="Navigate the store, account, and cart pages."
+            description="Shop, review your cart, and manage your account."
             className="md:hidden"
+            footer={
+              <div className="grid w-full grid-cols-2 gap-2">
+                <Button
+                  asChild
+                  className="rounded-full bg-[#d6b25e] text-[#24102f] hover:bg-[#f6e7b7]">
+                  <Link href="/products">Shop now</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full border-white/15 bg-white/6 text-white hover:bg-white/10 hover:text-white">
+                  <Link href="/cart">Cart {count > 0 ? `(${count})` : ""}</Link>
+                </Button>
+              </div>
+            }
           />
         </div>
       </div>
+      <MobileBottomNav count={count} pathname={pathname} />
     </header>
+  );
+}
+
+function MobileBottomNav({
+  count,
+  pathname,
+}: {
+  count: number;
+  pathname: string;
+}) {
+  const items = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/products", label: "Shop", icon: Store },
+    { href: "/cart", label: "Cart", icon: ShoppingBag, badge: count },
+    { href: "/account/dashboard", label: "Account", icon: UserRound },
+  ];
+
+  return (
+    <nav className="mobile-bottom-nav fixed inset-x-3 bottom-3 z-100 rounded-2xl border border-white/10 bg-[#1a0824]/92 px-2 py-2 text-white shadow-2xl shadow-black/30 backdrop-blur-2xl md:hidden">
+      <div className="grid grid-cols-4 gap-1">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = isActivePath(pathname, item.href);
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl px-2 text-[11px] font-medium text-violet-100/70 transition hover:bg-white/10 hover:text-[#f6e7b7]",
+                active &&
+                  "bg-[#d6b25e] text-[#24102f] hover:bg-[#d6b25e] hover:text-[#24102f]",
+              )}>
+              <Icon className="size-4" />
+              <span>{item.label}</span>
+              {item.badge ? (
+                <span className="absolute right-3 top-1 flex size-4 items-center justify-center rounded-full bg-[#f6e7b7] text-[10px] font-semibold text-[#24102f]">
+                  {item.badge}
+                </span>
+              ) : null}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 

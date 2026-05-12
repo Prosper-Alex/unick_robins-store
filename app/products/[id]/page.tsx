@@ -56,8 +56,8 @@ export default async function ProductDetailsPage({
     <>
       <Navbar />
       <main className="bg-background">
-        <section className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div>
+        <section className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10 lg:px-8">
+          <div className="min-w-0">
             <Button asChild variant="ghost" className="mb-5">
               <Link href="/products">
                 <ArrowLeft /> Back to shop
@@ -68,11 +68,11 @@ export default async function ProductDetailsPage({
               title={product.title}
             />
           </div>
-          <div className="flex flex-col justify-center">
+          <div className="flex min-w-0 flex-col justify-center">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#f6d87f]">
               {product.category}
             </p>
-            <h1 className="mt-4 text-4xl font-normal leading-[1.1] tracking-tight text-[#fff8df] sm:text-5xl">
+            <h1 className="mt-4 text-[2.35rem] font-normal leading-[1.04] tracking-tight text-[#fff8df] sm:text-5xl">
               {product.title}
             </h1>
             <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-violet-100">
@@ -94,25 +94,25 @@ export default async function ProductDetailsPage({
               {formatCurrency(product.price)}
             </p>
             <div className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-white/10 p-4 text-sm text-violet-50">
-              <p className="flex items-center justify-between">
+              <p className="flex items-center justify-between gap-4">
                 <span>Hydration level</span>
                 <span className="font-semibold text-[#f6d87f]">
                   {getHydrationLevel(product)}/5
                 </span>
               </p>
-              <p className="flex items-center gap-2">
+              <p className="flex items-start gap-2">
                 <Check className="size-4 text-[#f6d87f]" /> {product.stock}{" "}
                 units available
               </p>
               {hasComplimentaryShipping(product) && (
                 <p className="flex items-center gap-2">
-                  <Truck className="size-4 text-[#f6d87f]" /> Complimentary
+                  <Truck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Complimentary
                   shipping available
                 </p>
               )}
               {isTransferReady(product) && (
                 <p className="flex items-center gap-2">
-                  <Sparkles className="size-4 text-[#f6d87f]" /> Transfer ready
+                  <Sparkles className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Transfer ready
                   finish
                 </p>
               )}
@@ -130,11 +130,11 @@ export default async function ProductDetailsPage({
             </div>
             <div className="mt-8 grid gap-3 text-sm text-violet-100 sm:grid-cols-2">
               <p className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-[#f6d87f]" /> Delivery
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Delivery
                 estimate: 2-4 business days
               </p>
               <p className="flex items-center gap-2">
-                <PackageCheck className="size-4 text-[#f6d87f]" /> Secure
+                <PackageCheck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Secure
                 checkout architecture ready
               </p>
             </div>
@@ -169,9 +169,9 @@ export default async function ProductDetailsPage({
                 {[product, ...bundle].map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between rounded-2xl bg-violet-50 px-4 py-3">
-                    <span className="font-medium">{item.title}</span>
-                    <span>{formatCurrency(item.price)}</span>
+                    className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl bg-violet-50 px-4 py-3">
+                    <span className="min-w-0 font-medium">{item.title}</span>
+                    <span className="whitespace-nowrap">{formatCurrency(item.price)}</span>
                   </div>
                 ))}
               </div>
@@ -193,18 +193,29 @@ export default async function ProductDetailsPage({
                 : "Be the first to rate this product."}
             </p>
           </div>
-          <div className="grid gap-4">
+          <div className="grid min-w-0 gap-4">
             <ReviewForm productId={product.id} />
             {reviews.length > 0 ? (
               reviews.map((review) => (
                 <article
                   key={review.id}
                   className="rounded-3xl border border-white/10 bg-white/10 p-5 text-violet-50">
-                  <div className="mb-3 flex text-[#f6d87f]">
-                    {Array.from({ length: 5 }).map((_, star) => (
-                      <Star key={star} className={`size-4 ${star < review.rating ? "fill-current" : ""}`} />
-                    ))}
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex text-[#f6d87f]">
+                      {Array.from({ length: 5 }).map((_, star) => (
+                        <Star key={star} className={`size-4 ${star < review.rating ? "fill-current" : ""}`} />
+                      ))}
+                    </div>
+                    {review.verified_purchase && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-400/15 px-2.5 py-1 text-xs font-medium text-emerald-100">
+                        <Check className="size-3.5" />
+                        Verified purchase
+                      </span>
+                    )}
                   </div>
+                  {review.title && (
+                    <h3 className="mb-2 text-lg font-semibold text-[#fff8df]">{review.title}</h3>
+                  )}
                   <p className="leading-7">{review.body}</p>
                   <p className="mt-4 text-sm text-violet-200">
                     Customer review on {formatDate(review.created_at)}
@@ -236,11 +247,11 @@ export default async function ProductDetailsPage({
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
           <h2 className="mb-8 text-2xl font-normal leading-[1.1] tracking-tight text-[#fff8df] sm:text-3xl">
             Complete the ritual
           </h2>
-          <div className="grid w-full grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-12">
+          <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:gap-x-8">
             {related.map((item) => (
               <ProductCard key={item.id} product={item} />
             ))}

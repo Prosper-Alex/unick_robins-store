@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProductAction, updateProductAction, uploadProductImageAction } from "@/src/actions/admin-products";
+import { productCategories } from "@/src/constants/product-categories";
 import type { Product } from "@/src/types/product";
 
 const productSchema = z.object({
@@ -138,22 +139,22 @@ export function ProductForm({
   }
 
   return (
-    <form className="grid gap-5" onSubmit={form.handleSubmit(onSubmit)}>
+    <form className="grid gap-5 text-white" onSubmit={form.handleSubmit(onSubmit)}>
       <div className="grid gap-2">
         <label className="text-sm font-medium" htmlFor="title">Product title</label>
-        <Input id="title" className="h-11" {...form.register("title")} />
+        <Input id="title" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("title")} />
         <FormError message={form.formState.errors.title?.message} />
       </div>
       <div className="grid gap-2">
         <label className="text-sm font-medium" htmlFor="short_description">Short product summary</label>
-        <Input id="short_description" className="h-11" {...form.register("short_description")} />
+        <Input id="short_description" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("short_description")} />
         <FormError message={form.formState.errors.short_description?.message} />
       </div>
       <div className="grid gap-2">
         <label className="text-sm font-medium" htmlFor="description">Description</label>
         <textarea
           id="description"
-          className="min-h-28 rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="min-h-28 rounded-lg border border-white/10 bg-white/[0.08] px-3 py-2 text-sm text-white outline-none transition placeholder:text-violet-100/45 focus-visible:border-[#d6b25e] focus-visible:ring-3 focus-visible:ring-[#d6b25e]/30"
           {...form.register("description")}
         />
         <FormError message={form.formState.errors.description?.message} />
@@ -161,28 +162,39 @@ export function ProductForm({
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
           <label className="text-sm font-medium" htmlFor="price">Price</label>
-          <Input id="price" type="number" min="0" step="1" className="h-11" {...form.register("price")} />
+          <Input id="price" type="number" min="0" step="1" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("price")} />
           <FormError message={form.formState.errors.price?.message} />
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium" htmlFor="category">Category</label>
-          <Input id="category" className="h-11" {...form.register("category")} />
+          <Input
+            id="category"
+            list="product-category-options"
+            className="h-11 border-white/10 bg-white/[0.08] text-white"
+            placeholder="Hair Oil, Hair Serum, Hair Net..."
+            {...form.register("category")}
+          />
+          <datalist id="product-category-options">
+            {productCategories.map((category) => (
+              <option key={category} value={category} />
+            ))}
+          </datalist>
           <FormError message={form.formState.errors.category?.message} />
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium" htmlFor="stock">Stock quantity</label>
-          <Input id="stock" type="number" min="0" className="h-11" {...form.register("stock")} />
+          <Input id="stock" type="number" min="0" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("stock")} />
           <FormError message={form.formState.errors.stock?.message} />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
           <label className="text-sm font-medium" htmlFor="hydration_level">Hydration level</label>
-          <Input id="hydration_level" type="number" min="1" max="5" className="h-11" {...form.register("hydration_level")} />
+          <Input id="hydration_level" type="number" min="1" max="5" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("hydration_level")} />
           <FormError message={form.formState.errors.hydration_level?.message} />
         </div>
       </div>
-      <div className="grid gap-3 rounded-2xl border border-stone-200 p-4 sm:grid-cols-2">
+      <div className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.05] p-4 sm:grid-cols-2">
         <label className="flex items-center gap-3 text-sm font-medium">
           <input type="checkbox" className="size-4" {...form.register("transfer_ready")} />
           Transfer ready
@@ -194,21 +206,21 @@ export function ProductForm({
       </div>
       <div className="grid gap-2">
         <label className="text-sm font-medium" htmlFor="image">Product image</label>
-        <div className="grid gap-4 rounded-2xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-[168px_1fr]">
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-stone-200">
+        <div className="grid gap-4 rounded-2xl border border-white/10 bg-white/[0.05] p-4 sm:grid-cols-[168px_1fr]">
+          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-[#24102f] ring-1 ring-white/10">
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={previewUrl} alt="Product preview" className="h-full w-full object-cover" />
             ) : (
-              <div className="grid justify-items-center gap-2 text-stone-400">
+              <div className="grid justify-items-center gap-2 text-violet-100/50">
                 <ImageUp className="size-8" />
                 <span className="text-xs font-medium">Preview</span>
               </div>
             )}
           </div>
           <div className="grid content-start gap-3">
-            <Input id="image" className="h-11 bg-white" placeholder="Upload an image or paste a URL" {...form.register("image")} />
-            <label className="inline-flex h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 text-sm font-medium transition hover:bg-stone-100">
+            <Input id="image" className="h-11 border-white/10 bg-white/[0.08] text-white placeholder:text-violet-100/45" placeholder="Upload an image or paste a URL" {...form.register("image")} />
+            <label className="inline-flex h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.08] px-4 text-sm font-medium text-white transition hover:bg-white/12">
               {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />}
               Upload image
               <input
@@ -218,7 +230,7 @@ export function ProductForm({
                 onChange={(event) => handleImageUpload(event.target.files?.[0])}
               />
             </label>
-            <p className="text-xs leading-5 text-stone-500">Upload creates a store image URL and shows a preview before posting.</p>
+            <p className="text-xs leading-5 text-violet-100/60">Upload creates a store image URL and shows a preview before posting.</p>
           </div>
         </div>
         <FormError message={form.formState.errors.image?.message} />
@@ -226,7 +238,7 @@ export function ProductForm({
       <div className="grid gap-3">
         <div className="flex items-center justify-between gap-3">
           <label className="text-sm font-medium">Gallery images</label>
-          <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-stone-300 bg-white px-4 text-sm font-medium transition hover:bg-stone-100">
+          <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.08] px-4 text-sm font-medium text-white transition hover:bg-white/12">
             {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImageUp className="size-4" />}
             Add images
             <input
@@ -241,13 +253,13 @@ export function ProductForm({
         {galleryPreviews.length > 0 ? (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {galleryPreviews.map((image) => (
-              <div key={image} className="group relative aspect-square overflow-hidden rounded-xl bg-stone-100 ring-1 ring-stone-200">
+              <div key={image} className="group relative aspect-square overflow-hidden rounded-xl bg-[#24102f] ring-1 ring-white/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={image} alt="Product gallery preview" className="h-full w-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removeGalleryImage(image)}
-                  className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-white/90 text-stone-800 opacity-0 shadow-sm transition group-hover:opacity-100"
+                  className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-[#f6e7b7] text-[#24102f] opacity-0 shadow-sm transition group-hover:opacity-100"
                   aria-label="Remove gallery image"
                 >
                   <X className="size-4" />
@@ -256,13 +268,13 @@ export function ProductForm({
             ))}
           </div>
         ) : (
-          <p className="rounded-xl border border-dashed border-stone-300 bg-stone-50 px-4 py-5 text-sm text-stone-500">
+          <p className="rounded-xl border border-dashed border-white/15 bg-white/[0.05] px-4 py-5 text-sm text-violet-100/60">
             Add multiple angles, texture shots, or packaging images for this product.
           </p>
         )}
       </div>
-      {status && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{status}</p>}
-      <Button className="h-11 w-fit rounded-full px-6" disabled={form.formState.isSubmitting || uploading}>
+      {status && <p className="rounded-lg bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200 ring-1 ring-emerald-300/20">{status}</p>}
+      <Button className="h-11 w-full rounded-full bg-[#d6b25e] px-6 text-[#24102f] hover:bg-[#f6e7b7] sm:w-fit" disabled={form.formState.isSubmitting || uploading}>
         {form.formState.isSubmitting ? <Loader2 className="animate-spin" /> : <Save />}
         Save product
       </Button>
@@ -275,5 +287,5 @@ function FormError({ message }: { message?: string }) {
     return null;
   }
 
-  return <p className="text-sm text-red-600">{message}</p>;
+  return <p className="text-sm text-rose-200">{message}</p>;
 }

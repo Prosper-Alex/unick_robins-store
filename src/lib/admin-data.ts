@@ -4,8 +4,19 @@ import type { Product } from "@/src/types/product";
 
 export type AdminOrder = {
   id: string;
+  user_id?: string | null;
   status: string | null;
+  payment_status?: string | null;
+  payment_reference?: string | null;
   total: number | string | null;
+  shipping_fee?: number | string | null;
+  customer_name?: string | null;
+  customer_email?: string | null;
+  customer_phone?: string | null;
+  shipping_address?: unknown;
+  delivery_method?: string | null;
+  tracking_number?: string | null;
+  paid_at?: string | null;
   items: unknown;
   created_at: string;
 };
@@ -35,7 +46,7 @@ export async function getAdminStoreData(): Promise<AdminStoreData> {
     supabase.from("products").select("*").order("created_at", { ascending: false }),
     supabase
       .from("orders")
-      .select("id,status,total,items,created_at")
+      .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
       .order("created_at", { ascending: false }),
   ]);
 

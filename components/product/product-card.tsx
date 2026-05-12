@@ -35,8 +35,8 @@ export function ProductCard({ product }: { product: Product }) {
   const inStock = product.stock > 0;
 
   return (
-    <Card className="card-lift group relative h-full w-full overflow-hidden border-white/10 bg-white/[0.97] p-0 shadow-sm shadow-black/10">
-      <Link href={`/products/${product.id}`} className="relative z-0 block h-[60vh] max-h-[520px] min-h-[300px] overflow-hidden bg-violet-50 sm:aspect-[4/5] sm:h-auto sm:min-h-0">
+    <Card className="card-lift group relative h-full w-full overflow-hidden rounded-2xl border-white/10 bg-white/[0.97] p-0 shadow-sm shadow-black/10">
+      <Link href={`/products/${product.id}`} className="relative z-0 block aspect-[4/5] min-h-[260px] overflow-hidden bg-violet-50 sm:min-h-0">
         <Image
           src={product.image}
           alt={product.title}
@@ -45,11 +45,11 @@ export function ProductCard({ product }: { product: Product }) {
           className="object-cover transition duration-500 group-hover:scale-105"
         />
         {/* Category badge — warm gold tint */}
-        <span className="absolute left-4 top-4 rounded-full border border-[#d6b25e]/30 bg-[#fff8df]/95 px-3 py-1 text-xs font-medium text-[#4b1f61] shadow-sm backdrop-blur-sm">
+        <span className="absolute left-3 top-3 max-w-[calc(100%-4.25rem)] truncate rounded-full border border-[#d6b25e]/30 bg-[#fff8df]/95 px-3 py-1 text-xs font-medium text-[#4b1f61] shadow-sm backdrop-blur-sm sm:left-4 sm:top-4">
           {product.category}
         </span>
         {/* Stock badge */}
-        <span className={`absolute bottom-4 left-4 rounded-full px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-sm ${
+        <span className={`absolute bottom-3 left-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-sm sm:bottom-4 sm:left-4 ${
           inStock ? "bg-emerald-50/90 text-emerald-800" : "bg-rose-50/90 text-rose-800"
         }`}>
           {inStock ? `${product.stock} in stock` : "Sold out"}
@@ -57,7 +57,7 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
 
       {/* Action buttons */}
-      <div className="absolute right-4 top-4 z-20 flex flex-col gap-2">
+      <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 sm:right-4 sm:top-4">
         <button
           type="button"
           className="flex size-9 items-center justify-center rounded-full bg-[#fff8df]/95 text-[#4b1f61] shadow-sm backdrop-blur-sm transition hover:scale-110 hover:text-[#9f1239]"
@@ -70,21 +70,21 @@ export function ProductCard({ product }: { product: Product }) {
           <DialogTrigger asChild>
             <button
               type="button"
-              className="flex size-9 items-center justify-center rounded-full bg-[#fff8df]/95 text-[#4b1f61] opacity-0 shadow-sm backdrop-blur-sm transition hover:scale-110 group-hover:opacity-100"
+              className="flex size-9 items-center justify-center rounded-full bg-[#fff8df]/95 text-[#4b1f61] shadow-sm backdrop-blur-sm transition hover:scale-110 sm:opacity-0 sm:group-hover:opacity-100"
               aria-label={`Quick preview ${product.title}`}
             >
               <Eye className="size-4" />
             </button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>{product.title}</DialogTitle>
               <DialogDescription>
                 Quick preview of {product.title}, including product summary and key attributes.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-5 sm:grid-cols-[220px_1fr]">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-violet-100">
+            <div className="grid gap-5 sm:grid-cols-[minmax(160px,220px)_1fr]">
+              <div className="relative aspect-[4/5] max-h-[360px] overflow-hidden rounded-2xl bg-violet-100">
                 <Image src={product.image} alt={product.title} fill sizes="220px" className="object-cover" />
               </div>
               <div className="grid content-start gap-4">
@@ -100,12 +100,12 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       <CardContent className="grid gap-3 p-4 sm:gap-4 sm:p-5">
-        <div className="grid gap-2 min-w-0">
-          <Link href={`/products/${product.id}`} className="font-heading text-lg font-semibold tracking-tight text-[#24102f] transition hover:text-[#4b1f61]">
+        <div className="grid min-w-0 gap-2">
+          <Link href={`/products/${product.id}`} className="line-clamp-2 min-h-[3.25rem] font-heading text-lg font-semibold leading-tight tracking-tight text-[#24102f] transition hover:text-[#4b1f61]">
             {product.title}
           </Link>
-          <div className="flex items-center gap-2 text-xs text-[#65526d]">
-            <span className="flex text-[#8b5a00]">
+          <div className="flex min-w-0 items-center gap-2 text-xs text-[#65526d]">
+            <span className="flex shrink-0 text-[#8b5a00]">
               {Array.from({ length: 5 }).map((_, index) => (
                 <Star
                   key={index}
@@ -113,17 +113,17 @@ export function ProductCard({ product }: { product: Product }) {
                 />
               ))}
             </span>
-            <span>{reviewCount > 0 ? `${rating.toFixed(1)} (${reviewCount})` : "No reviews yet"}</span>
+            <span className="truncate">{reviewCount > 0 ? `${rating.toFixed(1)} (${reviewCount})` : "No reviews yet"}</span>
           </div>
           <p className="line-clamp-2 min-h-10 text-sm leading-5 text-[#65526d]">
             {getProductSummary(product)}
           </p>
         </div>
         <ProductMeta product={product} />
-        <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="grid min-w-0 grid-cols-[1fr_auto] items-center gap-3">
           {/* Price in Playfair Display for editorial feel */}
           <span className="font-heading min-w-0 text-xl font-semibold text-[#24102f]">{formatCurrency(product.price)}</span>
-          <Button className="rounded-full" onClick={() => addItem(product)} disabled={!inStock}>
+          <Button className="shrink-0 rounded-full px-4" onClick={() => addItem(product)} disabled={!inStock}>
             <ShoppingBag /> Add
           </Button>
         </div>
@@ -135,7 +135,7 @@ export function ProductCard({ product }: { product: Product }) {
 function ProductMeta({ product }: { product: Product }) {
   return (
     <div className="grid gap-2 text-xs text-[#65526d]">
-      <div className="flex items-center justify-between rounded-full bg-[#f3eef8] px-3 py-2">
+      <div className="flex items-center justify-between gap-3 rounded-full bg-[#f3eef8] px-3 py-2">
         <span>Hydration level</span>
         <span className="font-semibold text-[#4b1f61]">{getHydrationLevel(product)}/5</span>
       </div>

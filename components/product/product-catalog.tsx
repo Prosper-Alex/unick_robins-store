@@ -46,9 +46,9 @@ export function ProductCatalog({
   }
 
   return (
-    <div className="grid min-w-0 gap-10 overflow-hidden">
-      <div className="flex min-w-0 flex-col gap-4 rounded-2xl border border-white/10 bg-white/[0.96] p-4 shadow-sm shadow-black/10 md:flex-row md:items-center md:justify-between">
-        <div className="relative min-w-0 md:w-80">
+    <div className="grid min-w-0 gap-8 overflow-hidden sm:gap-10">
+      <div className="grid min-w-0 gap-4 rounded-2xl border border-white/10 bg-white/[0.96] p-3 shadow-sm shadow-black/10 sm:p-4 lg:grid-cols-[minmax(260px,320px)_1fr] lg:items-center">
+        <div className="relative min-w-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#65526d]" />
           <Input
             value={query}
@@ -57,13 +57,13 @@ export function ProductCatalog({
             className="h-11 rounded-full pl-9"
           />
         </div>
-        <div className="-mx-1 flex min-w-0 max-w-full gap-2 overflow-x-auto px-1 pb-1">
+        <div className="-mx-1 flex min-w-0 max-w-full gap-2 overflow-x-auto px-1 pb-1 lg:justify-end">
           {categories.map((item) => (
             <Button
               key={item}
               type="button"
               variant={category === item ? "default" : "outline"}
-              className="rounded-full"
+              className="shrink-0 rounded-full"
               onClick={() => updateCategory(item)}
             >
               {item}
@@ -83,7 +83,7 @@ export function ProductCatalog({
             )}
           </div>
 
-          <div className="grid min-w-0 w-full grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-12">
+          <div className="grid w-full min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:gap-x-8">
             {visibleProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

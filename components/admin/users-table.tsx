@@ -41,8 +41,31 @@ export function UsersTable({ users }: { users: UserRow[] }) {
         </div>
       </div>
       
-      <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.08] text-white shadow-xl shadow-black/20 backdrop-blur">
-        <Table>
+      <div className="grid gap-3 md:hidden">
+        {filteredUsers.length === 0 ? (
+          <div className="rounded-xl border border-white/10 bg-white/[0.08] px-4 py-8 text-center text-violet-100/55">
+            No users found.
+          </div>
+        ) : (
+          filteredUsers.map((user) => (
+            <div key={user.id} className="rounded-xl border border-white/10 bg-white/[0.08] p-4 text-white shadow-xl shadow-black/20 backdrop-blur">
+              <p className="break-all font-medium">{user.email}</p>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <RoleSelect user={user} />
+                <span className="rounded-full bg-[#24102f] px-3 py-1 font-mono text-xs text-violet-100/75">
+                  {user.orderCount} orders
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-violet-100/60">
+                Joined {new Date(user.created_at).toLocaleDateString()}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-xl border border-white/10 bg-white/[0.08] text-white shadow-xl shadow-black/20 backdrop-blur md:block">
+        <Table className="min-w-[720px]">
           <TableHeader>
             <TableRow className="border-white/10 bg-white/[0.04] hover:bg-white/[0.04]">
               <TableHead className="font-semibold text-violet-100/70">Email</TableHead>

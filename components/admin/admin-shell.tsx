@@ -3,13 +3,14 @@
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, Boxes, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { BarChart3, Boxes, LayoutDashboard, LogOut, ReceiptText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileNavToggle } from "@/components/shared/mobile-nav-toggle";
 
 const items = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Boxes },
+  { href: "/admin/orders", label: "Orders", icon: ReceiptText },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
 ];
@@ -32,8 +33,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#13091d] text-[#f8f3e7]">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-white/10 bg-[#1a0824] px-5 py-6 shadow-2xl shadow-black/30 lg:block">
+    <div className="min-h-screen bg-[#13091d] text-[#f8f3e7] lg:grid lg:grid-cols-[18rem_minmax(0,1fr)]">
+      <aside className="hidden min-h-screen border-r border-white/10 bg-[#1a0824] px-5 py-6 shadow-2xl shadow-black/30 lg:sticky lg:top-0 lg:flex lg:flex-col">
         <Link href="/admin" className="flex items-center gap-2">
           <span className="relative size-9 overflow-hidden rounded-full bg-[#f6e7b7] ring-1 ring-[#d6b25e]/50">
             <Image
@@ -68,7 +69,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <Button variant="outline" className="absolute bottom-6 left-5 right-5 border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" onClick={logout}>
+        <Button variant="outline" className="mt-auto border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" onClick={logout}>
           <LogOut /> Logout
         </Button>
       </aside>
@@ -98,8 +99,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="lg:pl-72">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</div>
+      <main className="min-w-0">
+        <div className="mx-auto w-full max-w-[1240px] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>
   );

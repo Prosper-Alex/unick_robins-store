@@ -1,11 +1,11 @@
 import type { Category, Product } from "@/src/types/product";
+import { productCategories } from "@/src/constants/product-categories";
 
-export const categories: Category[] = [
-  { id: "cat-1", name: "Edge Care", slug: "edge-care" },
-  { id: "cat-2", name: "Growth Oils", slug: "growth-oils" },
-  { id: "cat-3", name: "Hydration", slug: "hydration" },
-  { id: "cat-4", name: "Styling", slug: "styling" },
-];
+export const categories: Category[] = productCategories.map((name, index) => ({
+  id: `cat-${index + 1}`,
+  name,
+  slug: name.toLowerCase().replaceAll(" ", "-"),
+}));
 
 export const mockProducts: Product[] = [
   {
@@ -20,7 +20,7 @@ export const mockProducts: Product[] = [
       "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1200&q=85",
     ],
-    category: "Growth Oils",
+    category: "Hair Oil",
     stock: 32,
     hydration_level: 5,
     transfer_ready: true,
@@ -45,7 +45,7 @@ export const mockProducts: Product[] = [
       "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=85",
     ],
-    category: "Hydration",
+    category: "Leave-In Care",
     stock: 18,
     hydration_level: 5,
     transfer_ready: false,
@@ -95,7 +95,7 @@ export const mockProducts: Product[] = [
       "https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&q=85",
     ],
-    category: "Styling",
+    category: "Hair Mist",
     stock: 24,
     hydration_level: 2,
     transfer_ready: true,
@@ -120,7 +120,7 @@ export const mockProducts: Product[] = [
       "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?auto=format&fit=crop&w=1200&q=85",
     ],
-    category: "Hydration",
+    category: "Curl Cream",
     stock: 20,
     hydration_level: 5,
     transfer_ready: false,
@@ -145,7 +145,7 @@ export const mockProducts: Product[] = [
       "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=85",
     ],
-    category: "Styling",
+    category: "Hair Serum",
     stock: 15,
     hydration_level: 4,
     transfer_ready: true,

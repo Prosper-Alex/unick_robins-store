@@ -64,9 +64,9 @@ export function ProductTable({
               <Plus /> Add product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#16071f] p-4 text-white ring-white/10 sm:max-w-2xl sm:p-6">
             <DialogHeader>
-              <DialogTitle>Add product</DialogTitle>
+              <DialogTitle className="text-[#fff8df]">Add product</DialogTitle>
             </DialogHeader>
             <ProductForm
               onSaved={(product) => {
@@ -87,9 +87,67 @@ export function ProductTable({
         </p>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.08] text-white shadow-xl shadow-black/20 backdrop-blur">
+      <div className="grid gap-3 md:hidden">
         {products.length > 0 ? (
-          <Table>
+          products.map((product) => (
+            <div key={product.id} className="rounded-2xl border border-white/10 bg-white/[0.08] p-4 text-white shadow-xl shadow-black/20 backdrop-blur">
+              <div className="flex gap-3">
+                <div className="size-16 shrink-0 overflow-hidden rounded-xl bg-[#24102f] ring-1 ring-white/10">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{product.title}</p>
+                  <p className="mt-1 text-xs text-violet-100/55">{product.category}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <span className="rounded-xl bg-[#24102f] px-3 py-2 text-violet-100/70">
+                      Price <span className="block font-mono text-white">{formatCurrency(product.price)}</span>
+                    </span>
+                    <span className="rounded-xl bg-[#24102f] px-3 py-2 text-violet-100/70">
+                      Stock <span className="block font-mono text-white">{product.stock}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <span className={`rounded-full px-2 py-1 text-xs ${product.stock > 0 ? "bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-300/20" : "bg-rose-400/10 text-rose-200 ring-1 ring-rose-300/20"}`}>
+                  {product.stock > 0 ? "Live" : "Out of stock"}
+                </span>
+                <div className="flex gap-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="icon" className="border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" aria-label={`Edit ${product.title}`}>
+                        <Pencil />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#16071f] p-4 text-white ring-white/10 sm:max-w-2xl sm:p-6">
+                      <DialogHeader>
+                        <DialogTitle className="text-[#fff8df]">Edit product</DialogTitle>
+                      </DialogHeader>
+                      <ProductForm
+                        product={product}
+                        onSaved={(saved) => {
+                          setProducts((current) =>
+                            current.map((item) => (item.id === saved.id ? saved : item))
+                          );
+                          setMessage(`${saved.title} was updated.`);
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  <Button variant="destructive" size="icon" onClick={() => remove(product.id)} aria-label={`Delete ${product.title}`}>
+                    <Trash2 />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : null}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.08] text-white shadow-xl shadow-black/20 backdrop-blur md:block">
+        {products.length > 0 ? (
+          <Table className="min-w-[980px]">
             <TableHeader>
               <TableRow className="border-white/10 hover:bg-white/[0.04]">
                 <TableHead className="text-violet-100/70">Product</TableHead>
@@ -138,9 +196,9 @@ export function ProductTable({
                             <Pencil />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+                        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#16071f] p-4 text-white ring-white/10 sm:max-w-2xl sm:p-6">
                           <DialogHeader>
-                            <DialogTitle>Edit product</DialogTitle>
+                            <DialogTitle className="text-[#fff8df]">Edit product</DialogTitle>
                           </DialogHeader>
                           <ProductForm
                             product={product}

@@ -43,8 +43,10 @@ export function Footer() {
           </h2>
           <div className="grid gap-3 text-sm text-violet-200">
             <Link href="/products" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">All products</Link>
-            <Link href="/products?category=Hydration" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hydration</Link>
-            <Link href="/products?category=Styling" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Styling</Link>
+            <Link href="/products?category=Hair%20Oil" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Oil</Link>
+            <Link href="/products?category=Hair%20Serum" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Serum</Link>
+            <Link href="/products?category=Hair%20Net" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Net</Link>
+            <Link href="/products?category=Hair%20Bands" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Bands</Link>
           </div>
         </div>
         <div>

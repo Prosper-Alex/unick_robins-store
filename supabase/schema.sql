@@ -12,6 +12,18 @@ create table if not exists public.categories (
   created_at timestamptz not null default now()
 );
 
+insert into public.categories (name, slug)
+values
+  ('Hair Oil', 'hair-oil'),
+  ('Hair Serum', 'hair-serum'),
+  ('Hair Net', 'hair-net'),
+  ('Hair Bands', 'hair-bands'),
+  ('Edge Care', 'edge-care'),
+  ('Leave-In Care', 'leave-in-care'),
+  ('Curl Cream', 'curl-cream'),
+  ('Hair Mist', 'hair-mist')
+on conflict (slug) do update set name = excluded.name;
+
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -38,19 +50,53 @@ create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.users(id) on delete set null,
   status text not null default 'draft',
+  payment_status text not null default 'unpaid',
+  payment_provider text,
+  payment_reference text unique,
+  paid_at timestamptz,
+  customer_email text,
+  customer_name text,
+  customer_phone text,
+  shipping_address jsonb,
+  delivery_method text,
+  shipping_fee numeric(10, 2) not null default 0,
+  tracking_number text,
   total numeric(10, 2) not null default 0,
   items jsonb not null default '[]',
   created_at timestamptz not null default now()
 );
 
+alter table public.orders add column if not exists payment_status text not null default 'unpaid';
+alter table public.orders add column if not exists payment_provider text;
+alter table public.orders add column if not exists payment_reference text;
+alter table public.orders add column if not exists paid_at timestamptz;
+alter table public.orders add column if not exists customer_email text;
+alter table public.orders add column if not exists customer_name text;
+alter table public.orders add column if not exists customer_phone text;
+alter table public.orders add column if not exists shipping_address jsonb;
+alter table public.orders add column if not exists delivery_method text;
+alter table public.orders add column if not exists shipping_fee numeric(10, 2) not null default 0;
+alter table public.orders add column if not exists tracking_number text;
+
+create unique index if not exists orders_payment_reference_key on public.orders(payment_reference) where payment_reference is not null;
+
 create table if not exists public.reviews (
   id uuid primary key default gen_random_uuid(),
   product_id uuid not null references public.products(id) on delete cascade,
   user_id uuid references public.users(id) on delete set null,
+  title text,
   rating integer not null check (rating between 1 and 5),
   body text not null,
+  verified_purchase boolean not null default false,
+  status text not null default 'published' check (status in ('published', 'hidden')),
   created_at timestamptz not null default now()
 );
+
+alter table public.reviews add column if not exists title text;
+alter table public.reviews add column if not exists verified_purchase boolean not null default false;
+alter table public.reviews add column if not exists status text not null default 'published';
+drop index if exists public.reviews_product_user_key;
+create unique index reviews_product_user_key on public.reviews(product_id, user_id);
 
 alter table public.products alter column rating set default 0;
 alter table public.products alter column review_count set default 0;
@@ -94,12 +140,12 @@ drop policy if exists "Admins can delete product images" on storage.objects;
 
 create policy "Products are public" on public.products for select using (true);
 create policy "Categories are public" on public.categories for select using (true);
-create policy "Reviews are public" on public.reviews for select using (true);
+create policy "Reviews are public" on public.reviews for select using (status = 'published');
 create policy "Users can create reviews" on public.reviews for insert
-with check (auth.uid() = user_id);
+with check (auth.uid() = user_id and status = 'published' and verified_purchase = false);
 create policy "Users can update own reviews" on public.reviews for update
 using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+with check (auth.uid() = user_id and status = 'published' and verified_purchase = false);
 create policy "Users can delete own reviews" on public.reviews for delete
 using (auth.uid() = user_id);
 
@@ -116,11 +162,13 @@ begin
       select round(avg(rating)::numeric, 1)
       from public.reviews
       where product_id = target_product_id
+      and status = 'published'
     ), 0),
     review_count = (
       select count(*)
       from public.reviews
       where product_id = target_product_id
+      and status = 'published'
     )
   where id = target_product_id;
 end;
@@ -185,6 +233,61 @@ using (public.is_admin());
 create policy "Admins can update orders" on public.orders for update
 using (public.is_admin())
 with check (public.is_admin());
+
+create or replace function public.confirm_paid_order(target_reference text)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_order public.orders%rowtype;
+  order_item jsonb;
+  item_id uuid;
+  item_quantity integer;
+begin
+  select *
+  into target_order
+  from public.orders
+  where payment_reference = target_reference
+  for update;
+
+  if not found then
+    raise exception 'Order not found for payment reference %', target_reference;
+  end if;
+
+  if target_order.payment_status = 'paid' then
+    return target_order.id;
+  end if;
+
+  for order_item in select * from jsonb_array_elements(target_order.items)
+  loop
+    item_id := (order_item->>'id')::uuid;
+    item_quantity := greatest(coalesce((order_item->>'quantity')::integer, 1), 1);
+
+    update public.products
+    set stock = stock - item_quantity
+    where id = item_id
+      and stock >= item_quantity;
+
+    if not found then
+      raise exception 'Insufficient stock for product %', item_id;
+    end if;
+  end loop;
+
+  update public.orders
+  set
+    status = 'paid',
+    payment_status = 'paid',
+    paid_at = coalesce(paid_at, now())
+  where id = target_order.id;
+
+  return target_order.id;
+end;
+$$;
+
+revoke all on function public.confirm_paid_order(text) from public;
+grant execute on function public.confirm_paid_order(text) to service_role;
 
 create policy "Admins can insert products" on public.products for insert
 with check (

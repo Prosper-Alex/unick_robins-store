@@ -127,6 +127,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  @media (max-width: 767px) {
+    body:has(.mobile-bottom-nav) {
+      padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    }
+  }
   h1,
   h2,
   h3 {

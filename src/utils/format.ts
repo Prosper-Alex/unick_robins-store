@@ -1,7 +1,9 @@
 export function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
+  const currency = process.env.NEXT_PUBLIC_STORE_CURRENCY ?? process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY ?? "NGN";
+
+  return new Intl.NumberFormat(currency === "NGN" ? "en-NG" : "en-US", {
     style: "currency",
-    currency: "USD",
+    currency,
     maximumFractionDigits: 0,
   }).format(value);
 }

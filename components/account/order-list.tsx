@@ -55,10 +55,12 @@ export function OrderList({
 
 export function OrderStatus({ status }: { status: string }) {
   const label = status.replaceAll("_", " ");
+  const paidStates = ["paid", "processing", "shipped", "delivered", "completed"];
+  const problemStates = ["cancelled", "refunded", "payment_failed", "amount_mismatch"];
   const tone =
-    status === "completed"
+    paidStates.includes(status)
       ? "bg-emerald-50 text-emerald-700"
-      : status === "cancelled"
+      : problemStates.includes(status)
         ? "bg-red-50 text-red-700"
         : "bg-[#fff8df] text-[#7b5a18]";
 
