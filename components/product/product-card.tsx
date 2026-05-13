@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Eye, Heart, PackageCheck, ShoppingBag, Sparkles, Star } from "lucide-react";
+import type { MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -13,10 +14,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { throwProductToCart } from "@/components/product/cart-throw-animation";
 import { useCartStore } from "@/src/store/cart-store";
 import { useWishlistStore } from "@/src/store/wishlist-store";
 import type { Product } from "@/src/types/product";
 import { formatCurrency } from "@/src/utils/format";
+import {
+  getDisplayCurrencyForCountry,
+  getProductPrice,
+  localizeProduct,
+  type StoreCurrency,
+} from "@/src/utils/pricing";
 import {
   getHydrationLevel,
   getProductSummary,
@@ -26,13 +34,26 @@ import {
   isTransferReady,
 } from "@/src/utils/product-details";
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  country,
+}: {
+  product: Product;
+  country?: string | null;
+}) {
   const addItem = useCartStore((state) => state.addItem);
   const toggleWishlist = useWishlistStore((state) => state.toggle);
   const isWishlisted = useWishlistStore((state) => state.has(product.id));
   const rating = getRating(product);
   const reviewCount = getReviewCount(product);
   const inStock = product.stock > 0;
+  const currency = getDisplayCurrencyForCountry(country);
+  const displayPrice = getProductPrice(product, currency);
+
+  function addProduct(event: MouseEvent<HTMLButtonElement>) {
+    addItem(localizeProduct(product, currency));
+    throwProductToCart({ product, source: event.currentTarget });
+  }
 
   return (
     <Card className="card-lift group relative h-full w-full overflow-hidden rounded-2xl border-white/10 bg-white/[0.97] p-0 shadow-sm shadow-black/10">
@@ -90,7 +111,7 @@ export function ProductCard({ product }: { product: Product }) {
               <div className="grid content-start gap-4">
                 <p className="text-sm leading-6 text-[#65526d]">{getProductSummary(product)}</p>
                 <ProductMeta product={product} />
-                <Button className="w-fit rounded-full" onClick={() => addItem(product)} disabled={!inStock}>
+                <Button className="w-fit rounded-full" onClick={addProduct} disabled={!inStock}>
                   <ShoppingBag /> Add to cart
                 </Button>
               </div>
@@ -122,14 +143,20 @@ export function ProductCard({ product }: { product: Product }) {
         <ProductMeta product={product} />
         <div className="grid min-w-0 grid-cols-[1fr_auto] items-center gap-3">
           {/* Price in Playfair Display for editorial feel */}
-          <span className="font-heading min-w-0 text-xl font-semibold text-[#24102f]">{formatCurrency(product.price)}</span>
-          <Button className="shrink-0 rounded-full px-4" onClick={() => addItem(product)} disabled={!inStock}>
+          <span className="font-heading min-w-0 text-xl font-semibold text-[#24102f]">
+            {formatPrice(displayPrice, currency)}
+          </span>
+          <Button className="shrink-0 rounded-full px-4" onClick={addProduct} disabled={!inStock}>
             <ShoppingBag /> Add
           </Button>
         </div>
       </CardContent>
     </Card>
   );
+}
+
+function formatPrice(price: number, currency: StoreCurrency) {
+  return formatCurrency(price, currency);
 }
 
 function ProductMeta({ product }: { product: Product }) {

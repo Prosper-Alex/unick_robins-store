@@ -8,24 +8,40 @@ import { Input } from "@/components/ui/input";
 import { useCartStore } from "@/src/store/cart-store";
 import { createOrderAction } from "@/src/actions/checkout";
 import { formatCurrency } from "@/src/utils/format";
+import {
+  getClientCountryFallback,
+  getDisplayCurrencyForCountry,
+  getProductPrice,
+  getShippingFee,
+} from "@/src/utils/pricing";
 
-export function CheckoutForm() {
+export function CheckoutForm({ initialCountry }: { initialCountry?: string | null }) {
   const router = useRouter();
   const { items } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
+  const [country, setCountry] = useState(initialCountry === "NG" ? "Nigeria" : initialCountry ?? "");
+  const currency = getDisplayCurrencyForCountry(country);
 
   useEffect(() => {
-    queueMicrotask(() => setMounted(true));
-  }, []);
+    queueMicrotask(() => {
+      if (!initialCountry) {
+        const fallbackCountry = getClientCountryFallback();
+        if (fallbackCountry === "NG") {
+          setCountry("Nigeria");
+        }
+      }
+      setMounted(true);
+    });
+  }, [initialCountry]);
 
   const subtotal = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + getProductPrice(item, currency) * item.quantity,
     0,
   );
-  const shippingFee = deliveryMethod === "express" ? 15 : 0;
+  const shippingFee = getShippingFee(currency, deliveryMethod);
   const total = subtotal + shippingFee;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -153,7 +169,8 @@ export function CheckoutForm() {
               <Input
                 name="country"
                 autoComplete="country-name"
-                defaultValue="Nigeria"
+                value={country}
+                onChange={(event) => setCountry(event.target.value)}
                 required
                 className="rounded-xl"
               />
@@ -193,7 +210,7 @@ export function CheckoutForm() {
               <span className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">Express delivery</span>
                 <span className="text-sm text-stone-500">
-                  {formatCurrency(15)}
+                  {formatCurrency(getShippingFee(currency, "express"), currency)}
                 </span>
               </span>
               <span className="flex items-start gap-3 text-sm leading-6 text-stone-500">
@@ -236,7 +253,7 @@ export function CheckoutForm() {
                   {item.quantity}x {item.title}
                 </span>
                 <span className="whitespace-nowrap font-medium">
-                  {formatCurrency(item.price * item.quantity)}
+                  {formatCurrency(getProductPrice(item, currency) * item.quantity, currency)}
                 </span>
               </div>
             ))}
@@ -244,18 +261,18 @@ export function CheckoutForm() {
           <div className="space-y-2 border-t border-stone-200 pt-4 text-sm">
             <div className="flex justify-between">
               <span className="text-stone-500">Subtotal</span>
-              <span className="font-medium">{formatCurrency(subtotal)}</span>
+              <span className="font-medium">{formatCurrency(subtotal, currency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Shipping</span>
               <span className="font-medium">
-                {shippingFee > 0 ? formatCurrency(shippingFee) : "Free"}
+                {shippingFee > 0 ? formatCurrency(shippingFee, currency) : "Free"}
               </span>
             </div>
           </div>
           <div className="mt-4 flex justify-between border-t border-stone-200 pt-4 text-lg font-medium">
             <span>Total</span>
-            <span>{formatCurrency(total)}</span>
+            <span>{formatCurrency(total, currency)}</span>
           </div>
 
           {error && (
@@ -272,7 +289,7 @@ export function CheckoutForm() {
               <Loader2 className="animate-spin" />
             ) : (
               <>
-                <CreditCard className="size-5" /> Pay {formatCurrency(total)}
+                <CreditCard className="size-5" /> Pay {formatCurrency(total, currency)}
               </>
             )}
           </Button>

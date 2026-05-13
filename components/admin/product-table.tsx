@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Pencil, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -22,6 +23,62 @@ import { ProductForm } from "@/components/admin/product-form";
 import { deleteProductAction } from "@/src/actions/admin-products";
 import type { Product } from "@/src/types/product";
 import { formatCurrency, formatDate } from "@/src/utils/format";
+
+const productDialogContentClass =
+  "max-h-[90vh] gap-0 overflow-y-auto border-white/10 bg-[#16071f] p-0 text-white ring-white/10 sm:max-w-2xl";
+const productDialogHeaderClass =
+  "sticky top-0 z-[55] -mx-px border-b border-white/10 bg-[#16071f]/95 px-4 py-4 pr-16 shadow-lg shadow-black/20 backdrop-blur-2xl sm:px-6";
+const productDialogBodyClass = "px-4 pb-4 pt-5 sm:px-6 sm:pb-6";
+
+function ProductDialogHeader({ title }: { title: string }) {
+  return (
+    <DialogHeader className={productDialogHeaderClass}>
+      <DialogTitle className="text-[#fff8df]">{title}</DialogTitle>
+      <DialogClose asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-[#d6b25e]/35 bg-[#f6e7b7] text-[#24102f] shadow-lg shadow-black/25 backdrop-blur transition hover:bg-white hover:text-[#24102f]"
+        >
+          <X />
+          <span className="sr-only">Close</span>
+        </Button>
+      </DialogClose>
+    </DialogHeader>
+  );
+}
+
+function EditProductDialog({
+  product,
+  onSaved,
+}: {
+  product: Product;
+  onSaved: (product: Product) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="icon" className="border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" aria-label={`Edit ${product.title}`}>
+          <Pencil />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className={productDialogContentClass} showCloseButton={false}>
+        <ProductDialogHeader title="Edit product" />
+        <div className={productDialogBodyClass}>
+          <ProductForm
+            product={product}
+            onSaved={(saved) => {
+              onSaved(saved);
+              setOpen(false);
+            }}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function ProductTable({
   products: initialProducts,
@@ -64,17 +121,17 @@ export function ProductTable({
               <Plus /> Add product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#16071f] p-4 text-white ring-white/10 sm:max-w-2xl sm:p-6">
-            <DialogHeader>
-              <DialogTitle className="text-[#fff8df]">Add product</DialogTitle>
-            </DialogHeader>
-            <ProductForm
-              onSaved={(product) => {
-                setProducts((current) => [product, ...current]);
-                setMessage(`${product.title} was posted to the store.`);
-                setCreateOpen(false);
-              }}
-            />
+          <DialogContent className={productDialogContentClass} showCloseButton={false}>
+            <ProductDialogHeader title="Add product" />
+            <div className={productDialogBodyClass}>
+              <ProductForm
+                onSaved={(product) => {
+                  setProducts((current) => [product, ...current]);
+                  setMessage(`${product.title} was posted to the store.`);
+                  setCreateOpen(false);
+                }}
+              />
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -114,27 +171,15 @@ export function ProductTable({
                   {product.stock > 0 ? "Live" : "Out of stock"}
                 </span>
                 <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="icon" className="border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" aria-label={`Edit ${product.title}`}>
-                        <Pencil />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#16071f] p-4 text-white ring-white/10 sm:max-w-2xl sm:p-6">
-                      <DialogHeader>
-                        <DialogTitle className="text-[#fff8df]">Edit product</DialogTitle>
-                      </DialogHeader>
-                      <ProductForm
-                        product={product}
-                        onSaved={(saved) => {
-                          setProducts((current) =>
-                            current.map((item) => (item.id === saved.id ? saved : item))
-                          );
-                          setMessage(`${saved.title} was updated.`);
-                        }}
-                      />
-                    </DialogContent>
-                  </Dialog>
+                  <EditProductDialog
+                    product={product}
+                    onSaved={(saved) => {
+                      setProducts((current) =>
+                        current.map((item) => (item.id === saved.id ? saved : item))
+                      );
+                      setMessage(`${saved.title} was updated.`);
+                    }}
+                  />
                   <Button variant="destructive" size="icon" onClick={() => remove(product.id)} aria-label={`Delete ${product.title}`}>
                     <Trash2 />
                   </Button>
@@ -190,27 +235,15 @@ export function ProductTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end gap-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="icon" className="border-white/15 bg-white/[0.06] text-white hover:bg-white/10 hover:text-white" aria-label={`Edit ${product.title}`}>
-                            <Pencil />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#16071f] p-4 text-white ring-white/10 sm:max-w-2xl sm:p-6">
-                          <DialogHeader>
-                            <DialogTitle className="text-[#fff8df]">Edit product</DialogTitle>
-                          </DialogHeader>
-                          <ProductForm
-                            product={product}
-                            onSaved={(saved) => {
-                              setProducts((current) =>
-                                current.map((item) => (item.id === saved.id ? saved : item))
-                              );
-                              setMessage(`${saved.title} was updated.`);
-                            }}
-                          />
-                        </DialogContent>
-                      </Dialog>
+                      <EditProductDialog
+                        product={product}
+                        onSaved={(saved) => {
+                          setProducts((current) =>
+                            current.map((item) => (item.id === saved.id ? saved : item))
+                          );
+                          setMessage(`${saved.title} was updated.`);
+                        }}
+                      />
                       <Button variant="destructive" size="icon" onClick={() => remove(product.id)} aria-label={`Delete ${product.title}`}>
                         <Trash2 />
                       </Button>

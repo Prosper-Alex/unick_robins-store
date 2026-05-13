@@ -31,7 +31,8 @@ export function Footer() {
             </span>
           </div>
           <p className="max-w-md text-sm leading-7 text-violet-200">
-            Premium hair rituals for refined texture, polished edges, and everyday crown care.
+            Premium hair rituals for refined texture, polished edges, and
+            everyday crown care.
           </p>
           <p className="mt-6 text-xs text-violet-400">
             © {new Date().getFullYear()} Unick Robins. All rights reserved.
@@ -42,11 +43,31 @@ export function Footer() {
             Shop
           </h2>
           <div className="grid gap-3 text-sm text-violet-200">
-            <Link href="/products" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">All products</Link>
-            <Link href="/products?category=Hair%20Oil" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Oil</Link>
-            <Link href="/products?category=Hair%20Serum" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Serum</Link>
-            <Link href="/products?category=Hair%20Net" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Net</Link>
-            <Link href="/products?category=Hair%20Bands" className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">Hair Bands</Link>
+            <Link
+              href="/products"
+              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
+              All products
+            </Link>
+            <Link
+              href="/products?category=Hair%20Oil"
+              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
+              Hair Oil
+            </Link>
+            <Link
+              href="/products?category=Hair%20Serum"
+              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
+              Hair Serum
+            </Link>
+            <Link
+              href="/products?category=Hair%20Net"
+              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
+              Hair Net
+            </Link>
+            <Link
+              href="/products?category=Hair%20Bands"
+              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
+              Hair Bands
+            </Link>
           </div>
         </div>
         <div>
@@ -54,10 +75,14 @@ export function Footer() {
             Connect
           </h2>
           <div className="grid gap-3 text-sm text-violet-200">
-            <a href="mailto:hello@unickrobins.com" className="flex items-center gap-2 transition hover:text-[#f6d87f]">
-              <Mail className="size-4" /> hello@unickrobins.com
+            <a
+              href="mailto:unickrobins@gmail.com"
+              className="flex items-center gap-2 transition hover:text-[#f6d87f]">
+              <Mail className="size-4" /> unickrobins@gmail.com
             </a>
-            <a href="https://instagram.com" className="flex items-center gap-2 transition hover:text-[#f6d87f]">
+            <a
+              href="https://instagram.com/unick_robins"
+              className="flex items-center gap-2 transition hover:text-[#f6d87f]">
               <Camera className="size-4" /> Instagram
             </a>
           </div>

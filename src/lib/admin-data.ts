@@ -10,6 +10,8 @@ export type AdminOrder = {
   payment_reference?: string | null;
   total: number | string | null;
   shipping_fee?: number | string | null;
+  pricing_currency?: string | null;
+  pricing_country?: string | null;
   customer_name?: string | null;
   customer_email?: string | null;
   customer_phone?: string | null;
@@ -46,7 +48,7 @@ export async function getAdminStoreData(): Promise<AdminStoreData> {
     supabase.from("products").select("*").order("created_at", { ascending: false }),
     supabase
       .from("orders")
-      .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
+      .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,pricing_currency,pricing_country,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
       .order("created_at", { ascending: false }),
   ]);
 

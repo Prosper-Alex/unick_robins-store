@@ -5,6 +5,11 @@ import { authCookieNames, getSupabaseAdminClient, getSupabaseServerClient } from
 import { initializePaystackTransaction } from "@/src/lib/paystack";
 import type { CartItem } from "@/src/store/cart-store";
 import type { Product } from "@/src/types/product";
+import {
+  getDisplayCurrencyForCountry,
+  getProductPrice,
+  getShippingFee,
+} from "@/src/utils/pricing";
 
 export type CheckoutDetails = {
   email: string;
@@ -57,6 +62,7 @@ export async function createOrderAction(items: CartItem[], details: CheckoutDeta
   }
 
   const productIds = Array.from(new Set(items.map((item) => item.id)));
+  const pricingCurrency = getDisplayCurrencyForCountry(details.country);
   const { data: products, error: productError } = await adminSupabase
     .from("products")
     .select("*")
@@ -83,14 +89,15 @@ export async function createOrderAction(items: CartItem[], details: CheckoutDeta
     return {
       id: product.id,
       title: product.title,
-      price: Number(product.price),
+      price: getProductPrice(product, pricingCurrency),
+      currency: pricingCurrency,
       quantity,
       image: product.image,
     };
   });
 
   const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingFee = details.deliveryMethod === "express" ? 15 : 0;
+  const shippingFee = getShippingFee(pricingCurrency, details.deliveryMethod);
   const total = subtotal + shippingFee;
 
   let userId: string | null = null;
@@ -126,6 +133,8 @@ export async function createOrderAction(items: CartItem[], details: CheckoutDeta
       },
       delivery_method: details.deliveryMethod,
       shipping_fee: shippingFee,
+      pricing_currency: pricingCurrency,
+      pricing_country: details.country.trim(),
       total,
       items: normalizedItems,
     })
@@ -139,6 +148,7 @@ export async function createOrderAction(items: CartItem[], details: CheckoutDeta
   const initialized = await initializePaystackTransaction({
     email: customerEmail,
     amount: total,
+    currency: pricingCurrency,
     reference,
     callbackUrl: `${origin}/api/paystack/callback`,
     metadata: {

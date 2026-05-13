@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2, Save } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+
+type ResetSource = "recovery" | "settings";
 
 export function UpdatePasswordForm() {
   const router = useRouter();
@@ -14,13 +23,15 @@ export function UpdatePasswordForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [source, setSource] = useState<ResetSource>("settings");
   const [tokens, setTokens] = useState<{ access_token: string; refresh_token: string } | null>(null);
 
   useEffect(() => {
-    // Supabase redirects to this page with the tokens in the URL hash fragment
+    // Supabase recovery links arrive with tokens in the URL hash fragment.
     const hash = window.location.hash;
     if (!hash) {
-      queueMicrotask(() => setMessage("Invalid or missing password reset link."));
+      queueMicrotask(() => setReady(true));
       return;
     }
 
@@ -30,16 +41,23 @@ export function UpdatePasswordForm() {
     const type = hashParams.get("type");
 
     if (!access_token || type !== "recovery") {
-      queueMicrotask(() => setMessage("Invalid password reset link."));
+      queueMicrotask(() => {
+        setMessage("Invalid password reset link. Request a new link or sign in to change your password.");
+        setReady(true);
+      });
       return;
     }
 
-    queueMicrotask(() => setTokens({ access_token, refresh_token: refresh_token || "" }));
+    queueMicrotask(() => {
+      setTokens({ access_token, refresh_token: refresh_token || "" });
+      setSource("recovery");
+      setReady(true);
+      window.history.replaceState(null, "", window.location.pathname);
+    });
   }, []);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!tokens) return;
 
     const validationMessage = validateNewPassword(password, confirmPassword);
     if (validationMessage) {
@@ -56,8 +74,8 @@ export function UpdatePasswordForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           password,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
+          access_token: tokens?.access_token,
+          refresh_token: tokens?.refresh_token,
         }),
       });
       
@@ -76,17 +94,23 @@ export function UpdatePasswordForm() {
     }
   }
 
-  if (!tokens && !message) {
+  if (!ready) {
     return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-violet-100" /></div>;
   }
 
-  return (
+  const form = (
     <form className="grid gap-4" onSubmit={submit}>
+      {source === "recovery" && (
+        <div className="flex items-start gap-3 rounded-2xl border border-[#f6e7b7]/25 bg-[#f6e7b7]/10 px-4 py-3 text-sm text-violet-50">
+          <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#f6e7b7]" />
+          <p>Your reset link is verified. Save a new password to continue signed in.</p>
+        </div>
+      )}
       <div className="grid gap-2">
         <label htmlFor="password" className="text-sm font-medium">New password</label>
         <PasswordInput
           id="password"
-          disabled={!tokens}
+          disabled={loading}
           show={showPassword}
           toggleShow={() => setShowPassword((current) => !current)}
           value={password}
@@ -97,7 +121,7 @@ export function UpdatePasswordForm() {
         <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm new password</label>
         <PasswordInput
           id="confirmPassword"
-          disabled={!tokens}
+          disabled={loading}
           show={showConfirmPassword}
           toggleShow={() => setShowConfirmPassword((current) => !current)}
           value={confirmPassword}
@@ -110,12 +134,35 @@ export function UpdatePasswordForm() {
       
       {message && <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-violet-50">{message}</p>}
       
-      <Button className="h-12 rounded-full" disabled={loading || !tokens}>
+      <Button className="h-12 rounded-full" disabled={loading}>
         {loading ? <Loader2 className="animate-spin" /> : <Save />}
         Save new password
       </Button>
     </form>
   );
+
+  if (source === "recovery" && tokens) {
+    return (
+      <Dialog open>
+        <DialogContent
+          showCloseButton={false}
+          className="border-white/10 bg-[#24102f] p-6 text-white sm:max-w-[460px]"
+        >
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-normal text-[#fff8df]">
+              Update your password
+            </DialogTitle>
+            <DialogDescription className="text-violet-100">
+              Your recovery link checked out. Set a new password and you will be signed in automatically.
+            </DialogDescription>
+          </DialogHeader>
+          {form}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return form;
 }
 
 function PasswordInput({

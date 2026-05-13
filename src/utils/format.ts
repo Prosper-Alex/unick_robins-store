@@ -1,10 +1,12 @@
-export function formatCurrency(value: number) {
-  const currency = process.env.NEXT_PUBLIC_STORE_CURRENCY ?? process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY ?? "NGN";
+import type { StoreCurrency } from "@/src/utils/pricing";
 
-  return new Intl.NumberFormat(currency === "NGN" ? "en-NG" : "en-US", {
+export function formatCurrency(value: number, currency?: StoreCurrency | string | null) {
+  const resolvedCurrency = currency ?? process.env.NEXT_PUBLIC_STORE_CURRENCY ?? process.env.NEXT_PUBLIC_PAYSTACK_CURRENCY ?? "NGN";
+
+  return new Intl.NumberFormat(resolvedCurrency === "NGN" ? "en-NG" : "en-US", {
     style: "currency",
-    currency,
-    maximumFractionDigits: 0,
+    currency: resolvedCurrency,
+    maximumFractionDigits: resolvedCurrency === "NGN" ? 0 : 2,
   }).format(value);
 }
 

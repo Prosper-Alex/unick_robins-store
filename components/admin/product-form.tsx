@@ -15,7 +15,9 @@ const productSchema = z.object({
   title: z.string().min(2, "Title is required"),
   short_description: z.string().min(8, "Use at least 8 characters"),
   description: z.string().min(10, "Use at least 10 characters"),
-  price: z.coerce.number().positive("Price must be greater than 0"),
+  base_currency: z.enum(["NGN", "USD"]),
+  price_ngn: z.coerce.number().positive("Naira price must be greater than 0"),
+  price_usd: z.coerce.number().positive("USD price must be greater than 0"),
   image: z.string().url("Use a valid image URL"),
   category: z.string().min(2, "Category is required"),
   stock: z.coerce.number().int().min(0, "Stock cannot be negative"),
@@ -45,7 +47,9 @@ export function ProductForm({
       title: product?.title ?? "",
       short_description: product?.short_description ?? "",
       description: product?.description ?? "",
-      price: product?.price ?? 0,
+      base_currency: product?.base_currency ?? "NGN",
+      price_ngn: product?.price_ngn ?? (product?.base_currency === "NGN" || !product?.base_currency ? product?.price : 0) ?? 0,
+      price_usd: product?.price_usd ?? (product?.base_currency === "USD" ? product?.price : 0) ?? 0,
       image: product?.image ?? "",
       category: product?.category ?? "",
       stock: product?.stock ?? 0,
@@ -123,9 +127,13 @@ export function ProductForm({
   async function onSubmit(values: ProductFormValues) {
     setStatus(null);
     try {
+      const payload = {
+        ...values,
+        price: values.base_currency === "NGN" ? values.price_ngn : values.price_usd,
+      };
       const saved = product?.id
-        ? await updateProductAction(product.id, values)
-        : await createProductAction(values);
+        ? await updateProductAction(product.id, payload)
+        : await createProductAction(payload);
       setStatus(product?.id ? "Product changes saved." : "Product posted to the store.");
       onSaved?.(saved);
       if (!product) {
@@ -159,11 +167,28 @@ export function ProductForm({
         />
         <FormError message={form.formState.errors.description?.message} />
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <div className="grid gap-2">
-          <label className="text-sm font-medium" htmlFor="price">Price</label>
-          <Input id="price" type="number" min="0" step="1" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("price")} />
-          <FormError message={form.formState.errors.price?.message} />
+          <label className="text-sm font-medium" htmlFor="base_currency">Base currency</label>
+          <select
+            id="base_currency"
+            className="h-11 rounded-lg border border-white/10 bg-[#24102f] px-3 text-sm text-white outline-none transition focus-visible:border-[#d6b25e] focus-visible:ring-3 focus-visible:ring-[#d6b25e]/30"
+            {...form.register("base_currency")}
+          >
+            <option value="NGN">Naira</option>
+            <option value="USD">USD</option>
+          </select>
+          <FormError message={form.formState.errors.base_currency?.message} />
+        </div>
+        <div className="grid gap-2">
+          <label className="text-sm font-medium" htmlFor="price_ngn">Nigeria price (NGN)</label>
+          <Input id="price_ngn" type="number" min="0" step="1" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("price_ngn")} />
+          <FormError message={form.formState.errors.price_ngn?.message} />
+        </div>
+        <div className="grid gap-2">
+          <label className="text-sm font-medium" htmlFor="price_usd">International price (USD)</label>
+          <Input id="price_usd" type="number" min="0" step="0.01" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("price_usd")} />
+          <FormError message={form.formState.errors.price_usd?.message} />
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium" htmlFor="category">Category</label>
@@ -181,6 +206,8 @@ export function ProductForm({
           </datalist>
           <FormError message={form.formState.errors.category?.message} />
         </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
         <div className="grid gap-2">
           <label className="text-sm font-medium" htmlFor="stock">Stock quantity</label>
           <Input id="stock" type="number" min="0" className="h-11 border-white/10 bg-white/[0.08] text-white" {...form.register("stock")} />

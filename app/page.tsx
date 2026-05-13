@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Sparkles, Star } from "lucide-react";
@@ -7,8 +8,10 @@ import { Footer } from "@/components/shared/footer";
 import { Newsletter } from "@/components/shared/newsletter";
 import { ProductCard } from "@/components/product/product-card";
 import { getProducts } from "@/src/services/products";
+import { getCountryFromHeaders } from "@/src/utils/pricing";
 
 export default async function Home() {
+  const country = getCountryFromHeaders(await headers());
   const products = await getProducts();
   const featured = products.slice(0, 3);
 
@@ -81,7 +84,7 @@ export default async function Home() {
           </div>
           <div className="grid w-full grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-x-8">
             {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} country={country} />
             ))}
           </div>
         </section>

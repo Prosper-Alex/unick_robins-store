@@ -44,7 +44,7 @@ export function OrderList({
             </p>
           </div>
           <div className="flex items-center justify-between gap-4 sm:justify-end">
-            <p className="font-medium text-[#24102f]">{formatCurrency(order.total)}</p>
+            <p className="font-medium text-[#24102f]">{formatCurrency(order.total, order.pricing_currency)}</p>
             {!compact && <ArrowRight className="size-4 text-[#9a7734]" />}
           </div>
         </Link>

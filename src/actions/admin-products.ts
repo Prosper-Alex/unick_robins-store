@@ -50,10 +50,38 @@ async function logAudit(
   });
 }
 
+function getLegacyProductInput(input: ProductInput) {
+  const legacyInput = { ...input };
+  delete legacyInput.base_currency;
+  delete legacyInput.price_ngn;
+  delete legacyInput.price_usd;
+
+  return legacyInput;
+}
+
+function isMissingPricingColumnError(error: { code?: string; message?: string } | null) {
+  if (!error) {
+    return false;
+  }
+
+  return (
+    error.code === "PGRST204" &&
+    (error.message?.includes("'base_currency'") ||
+      error.message?.includes("'price_ngn'") ||
+      error.message?.includes("'price_usd'"))
+  );
+}
+
 export async function createProductAction(input: ProductInput): Promise<Product> {
   const { supabase, user } = await verifyAdmin();
 
-  const { data, error } = await supabase.from("products").insert(input).select("*").single();
+  let { data, error } = await supabase.from("products").insert(input).select("*").single();
+
+  if (isMissingPricingColumnError(error)) {
+    const result = await supabase.from("products").insert(getLegacyProductInput(input)).select("*").single();
+    data = result.data;
+    error = result.error;
+  }
 
   if (error) {
     throw new Error(error.message);
@@ -69,12 +97,23 @@ export async function createProductAction(input: ProductInput): Promise<Product>
 export async function updateProductAction(id: string, input: ProductInput): Promise<Product> {
   const { supabase, user } = await verifyAdmin();
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("products")
     .update(input)
     .eq("id", id)
     .select("*")
     .single();
+
+  if (isMissingPricingColumnError(error)) {
+    const result = await supabase
+      .from("products")
+      .update(getLegacyProductInput(input))
+      .eq("id", id)
+      .select("*")
+      .single();
+    data = result.data;
+    error = result.error;
+  }
 
   if (error) {
     throw new Error(error.message);

@@ -2,15 +2,36 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCartStore } from "@/src/store/cart-store";
 import { formatCurrency } from "@/src/utils/format";
+import {
+  getClientCountryFallback,
+  getDisplayCurrencyForCountry,
+  getProductPrice,
+} from "@/src/utils/pricing";
 
-export function CartView() {
+export function CartView({ initialCountry }: { initialCountry?: string | null }) {
   const { items, removeItem, updateQuantity, clearCart } = useCartStore();
-  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  const [country, setCountry] = useState(initialCountry);
+  const currency = getDisplayCurrencyForCountry(country);
+  const subtotal = items.reduce(
+    (total, item) => total + getProductPrice(item, currency) * item.quantity,
+    0,
+  );
+
+  useEffect(() => {
+    if (!initialCountry) {
+      const frame = window.requestAnimationFrame(() => {
+        setCountry(getClientCountryFallback());
+      });
+
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [initialCountry]);
 
   if (items.length === 0) {
     return (
@@ -40,7 +61,7 @@ export function CartView() {
               <div className="min-w-0">
                 <p className="text-sm font-medium text-[#8b5a00]">{item.category}</p>
                 <h2 className="mt-1 line-clamp-2 text-base font-semibold leading-tight text-[#24102f] sm:text-lg">{item.title}</h2>
-                <p className="mt-1 text-sm text-[#65526d]">{formatCurrency(item.price)}</p>
+                <p className="mt-1 text-sm text-[#65526d]">{formatCurrency(getProductPrice(item, currency), currency)}</p>
               </div>
               <div className="col-span-2 flex items-center justify-between gap-2 rounded-2xl bg-stone-50 p-2 sm:col-span-1 sm:justify-end sm:bg-transparent sm:p-0">
                 <Button
@@ -77,7 +98,7 @@ export function CartView() {
         <div className="mt-6 grid gap-4 text-sm">
           <div className="flex justify-between">
             <span className="text-[#65526d]">Subtotal</span>
-            <span className="font-medium">{formatCurrency(subtotal)}</span>
+            <span className="font-medium">{formatCurrency(subtotal, currency)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-[#65526d]">Shipping</span>
@@ -85,7 +106,7 @@ export function CartView() {
           </div>
           <div className="flex justify-between border-t pt-4 text-lg font-semibold">
             <span>Total</span>
-            <span>{formatCurrency(subtotal)}</span>
+            <span>{formatCurrency(subtotal, currency)}</span>
           </div>
         </div>
         <Button asChild className="mt-6 w-full text-white" variant="secondary">

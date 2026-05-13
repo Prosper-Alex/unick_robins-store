@@ -12,9 +12,11 @@ const PAGE_SIZE = 8;
 export function ProductCatalog({
   products,
   initialCategory = "All",
+  country,
 }: {
   products: Product[];
   initialCategory?: string;
+  country?: string | null;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
@@ -85,7 +87,7 @@ export function ProductCatalog({
 
           <div className="grid w-full min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:gap-x-8">
             {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} country={country} />
             ))}
           </div>
 

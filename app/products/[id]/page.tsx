@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -20,6 +21,11 @@ import { getProductById, getProducts } from "@/src/services/products";
 import { getProductReviews } from "@/src/services/reviews";
 import { formatCurrency, formatDate } from "@/src/utils/format";
 import {
+  getCountryFromHeaders,
+  getDisplayCurrencyForCountry,
+  getProductPrice,
+} from "@/src/utils/pricing";
+import {
   getBenefits,
   getHairCompatibility,
   getHydrationLevel,
@@ -37,6 +43,8 @@ export default async function ProductDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const country = getCountryFromHeaders(await headers());
+  const currency = getDisplayCurrencyForCountry(country);
   const product = await getProductById(id);
 
   if (!product) {
@@ -91,7 +99,7 @@ export default async function ProductDetailsPage({
               {getProductSummary(product)}
             </p>
             <p className="mt-8 text-2xl font-medium leading-[1.12] text-[#fff8df]">
-              {formatCurrency(product.price)}
+              {formatCurrency(getProductPrice(product, currency), currency)}
             </p>
             <div className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-white/10 p-4 text-sm text-violet-50">
               <p className="flex items-center justify-between gap-4">
@@ -118,7 +126,7 @@ export default async function ProductDetailsPage({
               )}
             </div>
             <div className="mt-8">
-              <AddToCartButton product={product} />
+              <AddToCartButton product={product} country={country} />
             </div>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row">
               <Button
@@ -171,7 +179,7 @@ export default async function ProductDetailsPage({
                     key={item.id}
                     className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl bg-violet-50 px-4 py-3">
                     <span className="min-w-0 font-medium">{item.title}</span>
-                    <span className="whitespace-nowrap">{formatCurrency(item.price)}</span>
+                    <span className="whitespace-nowrap">{formatCurrency(getProductPrice(item, currency), currency)}</span>
                   </div>
                 ))}
               </div>
@@ -253,7 +261,7 @@ export default async function ProductDetailsPage({
           </h2>
           <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:gap-x-8">
             {related.map((item) => (
-              <ProductCard key={item.id} product={item} />
+              <ProductCard key={item.id} product={item} country={country} />
             ))}
           </div>
         </section>

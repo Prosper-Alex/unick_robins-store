@@ -44,11 +44,13 @@ export function toPaystackSubunit(amount: number) {
 export async function initializePaystackTransaction(input: {
   email: string;
   amount: number;
+  currency?: string;
   reference: string;
   callbackUrl: string;
   metadata?: Record<string, unknown>;
 }) {
-  const { secretKey, currency } = getPaystackConfig();
+  const { secretKey, currency: configuredCurrency } = getPaystackConfig();
+  const currency = input.currency ?? configuredCurrency;
 
   if (!secretKey) {
     throw new Error("Paystack is not configured. Add PAYSTACK_SECRET_KEY.");

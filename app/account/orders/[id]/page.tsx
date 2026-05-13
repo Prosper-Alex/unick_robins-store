@@ -25,6 +25,7 @@ export default async function OrderDetailsPage({
   if (!order) {
     notFound();
   }
+  const currency = order.pricing_currency;
 
   return (
     <AccountShell>
@@ -52,7 +53,7 @@ export default async function OrderDetailsPage({
             </div>
             <div className="grid gap-2 text-left sm:text-right">
               <OrderStatus status={order.status} />
-              <p className="text-2xl font-medium text-[#24102f]">{formatCurrency(order.total)}</p>
+              <p className="text-2xl font-medium text-[#24102f]">{formatCurrency(order.total, currency)}</p>
             </div>
           </div>
 
@@ -81,11 +82,11 @@ export default async function OrderDetailsPage({
                   <div>
                     <p className="font-medium text-[#24102f]">{item.title ?? "Product"}</p>
                     <p className="mt-1 text-sm text-stone-500">
-                      Qty {item.quantity ?? 1} · {formatCurrency(item.price ?? 0)} each
+                      Qty {item.quantity ?? 1} · {formatCurrency(item.price ?? 0, currency)} each
                     </p>
                   </div>
                   <p className="font-medium text-[#24102f]">
-                    {formatCurrency((item.price ?? 0) * (item.quantity ?? 1))}
+                    {formatCurrency((item.price ?? 0) * (item.quantity ?? 1), currency)}
                   </p>
                 </div>
               ))
@@ -129,11 +130,11 @@ export default async function OrderDetailsPage({
                 )}
                 <div className="flex justify-between gap-4">
                   <span>Shipping</span>
-                  <span>{order.shipping_fee > 0 ? formatCurrency(order.shipping_fee) : "Free"}</span>
+                  <span>{order.shipping_fee > 0 ? formatCurrency(order.shipping_fee, currency) : "Free"}</span>
                 </div>
                 <div className="flex justify-between gap-4 border-t border-stone-200 pt-3 text-lg font-medium text-[#24102f]">
                   <span>Total</span>
-                  <span>{formatCurrency(order.total)}</span>
+                  <span>{formatCurrency(order.total, currency)}</span>
                 </div>
               </div>
             </div>

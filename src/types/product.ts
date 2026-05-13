@@ -4,6 +4,10 @@ export type Product = {
   description: string;
   short_description?: string | null;
   price: number;
+  base_currency?: "NGN" | "USD" | null;
+  price_ngn?: number | null;
+  price_usd?: number | null;
+  display_currency?: "NGN" | "USD" | null;
   image: string;
   gallery?: string[] | null;
   category: string;
@@ -25,6 +29,9 @@ export type ProductInput = {
   description: string;
   short_description?: string;
   price: number;
+  base_currency?: "NGN" | "USD";
+  price_ngn?: number;
+  price_usd?: number;
   image: string;
   gallery?: string[];
   category: string;

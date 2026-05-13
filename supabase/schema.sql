@@ -30,6 +30,9 @@ create table if not exists public.products (
   description text not null,
   short_description text,
   price numeric(10, 2) not null,
+  base_currency text not null default 'NGN' check (base_currency in ('NGN', 'USD')),
+  price_ngn numeric(10, 2),
+  price_usd numeric(10, 2),
   image text not null,
   gallery text[] default '{}',
   category text not null,
@@ -60,6 +63,8 @@ create table if not exists public.orders (
   shipping_address jsonb,
   delivery_method text,
   shipping_fee numeric(10, 2) not null default 0,
+  pricing_currency text check (pricing_currency is null or pricing_currency in ('NGN', 'USD')),
+  pricing_country text,
   tracking_number text,
   total numeric(10, 2) not null default 0,
   items jsonb not null default '[]',
@@ -77,6 +82,10 @@ alter table public.orders add column if not exists shipping_address jsonb;
 alter table public.orders add column if not exists delivery_method text;
 alter table public.orders add column if not exists shipping_fee numeric(10, 2) not null default 0;
 alter table public.orders add column if not exists tracking_number text;
+alter table public.orders add column if not exists pricing_currency text;
+alter table public.orders add column if not exists pricing_country text;
+alter table public.orders drop constraint if exists orders_pricing_currency_check;
+alter table public.orders add constraint orders_pricing_currency_check check (pricing_currency is null or pricing_currency in ('NGN', 'USD'));
 
 create unique index if not exists orders_payment_reference_key on public.orders(payment_reference) where payment_reference is not null;
 
@@ -100,6 +109,11 @@ create unique index reviews_product_user_key on public.reviews(product_id, user_
 
 alter table public.products alter column rating set default 0;
 alter table public.products alter column review_count set default 0;
+alter table public.products add column if not exists base_currency text not null default 'NGN';
+alter table public.products add column if not exists price_ngn numeric(10, 2);
+alter table public.products add column if not exists price_usd numeric(10, 2);
+alter table public.products drop constraint if exists products_base_currency_check;
+alter table public.products add constraint products_base_currency_check check (base_currency in ('NGN', 'USD'));
 
 create table if not exists public.wishlist (
   id uuid primary key default gen_random_uuid(),
@@ -109,12 +123,21 @@ create table if not exists public.wishlist (
   unique (user_id, product_id)
 );
 
+create table if not exists public.newsletter_subscribers (
+  email text primary key,
+  status text not null default 'subscribed' check (status in ('subscribed', 'unsubscribed')),
+  source text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 alter table public.users enable row level security;
 alter table public.products enable row level security;
 alter table public.categories enable row level security;
 alter table public.orders enable row level security;
 alter table public.reviews enable row level security;
 alter table public.wishlist enable row level security;
+alter table public.newsletter_subscribers enable row level security;
 
 drop policy if exists "Products are public" on public.products;
 drop policy if exists "Categories are public" on public.categories;
@@ -133,6 +156,9 @@ drop policy if exists "Admins can update orders" on public.orders;
 drop policy if exists "Admins can insert products" on public.products;
 drop policy if exists "Admins can update products" on public.products;
 drop policy if exists "Admins can delete products" on public.products;
+drop policy if exists "Anyone can subscribe to newsletter" on public.newsletter_subscribers;
+drop policy if exists "Admins can read newsletter subscribers" on public.newsletter_subscribers;
+drop policy if exists "Admins can update newsletter subscribers" on public.newsletter_subscribers;
 drop policy if exists "Product images are public" on storage.objects;
 drop policy if exists "Admins can upload product images" on storage.objects;
 drop policy if exists "Admins can update product images" on storage.objects;
@@ -206,6 +232,7 @@ create policy "Users read own profile" on public.users for select using (auth.ui
 create policy "Users insert own customer profile" on public.users for insert with check (auth.uid() = id and role = 'customer');
 create policy "Wishlist own rows" on public.wishlist for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "Orders own rows" on public.orders for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "Anyone can subscribe to newsletter" on public.newsletter_subscribers for insert with check (status = 'subscribed');
 
 create or replace function public.is_admin()
 returns boolean
@@ -224,6 +251,13 @@ create policy "Admins can read users" on public.users for select
 using (public.is_admin());
 
 create policy "Admins can update users" on public.users for update
+using (public.is_admin())
+with check (public.is_admin());
+
+create policy "Admins can read newsletter subscribers" on public.newsletter_subscribers for select
+using (public.is_admin());
+
+create policy "Admins can update newsletter subscribers" on public.newsletter_subscribers for update
 using (public.is_admin())
 with check (public.is_admin());
 

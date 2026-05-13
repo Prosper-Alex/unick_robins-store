@@ -19,6 +19,8 @@ export type AccountOrder = {
   payment_reference: string | null;
   total: number;
   shipping_fee: number;
+  pricing_currency: string | null;
+  pricing_country: string | null;
   customer_name: string | null;
   customer_email: string | null;
   customer_phone: string | null;
@@ -91,7 +93,7 @@ export async function getAccountOrders(limit?: number) {
   const { supabase, user, role } = await getAccountContext();
   let query = supabase
     .from("orders")
-    .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
+    .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,pricing_currency,pricing_country,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -116,7 +118,7 @@ export async function getAccountOrder(id: string) {
   const { supabase, user, role } = await getAccountContext();
   const { data, error } = await supabase
     .from("orders")
-    .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
+    .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,pricing_currency,pricing_country,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -136,6 +138,8 @@ function normalizeOrder(order: {
   payment_reference?: string | null;
   total: number | string | null;
   shipping_fee?: number | string | null;
+  pricing_currency?: string | null;
+  pricing_country?: string | null;
   customer_name?: string | null;
   customer_email?: string | null;
   customer_phone?: string | null;
@@ -154,6 +158,8 @@ function normalizeOrder(order: {
     payment_reference: order.payment_reference ?? null,
     total: Number(order.total ?? 0),
     shipping_fee: Number(order.shipping_fee ?? 0),
+    pricing_currency: order.pricing_currency ?? null,
+    pricing_country: order.pricing_country ?? null,
     customer_name: order.customer_name ?? null,
     customer_email: order.customer_email ?? null,
     customer_phone: order.customer_phone ?? null,
