@@ -13,12 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Footer } from "@/components/shared/footer";
 import { Navbar } from "@/components/shared/navbar";
+import { OdometerValue } from "@/components/shared/odometer-value";
 import { AddToCartButton } from "@/components/product/add-to-cart-button";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductCard } from "@/components/product/product-card";
 import { ReviewForm } from "@/components/product/review-form";
 import { getProductById, getProducts } from "@/src/services/products";
 import { getProductReviews } from "@/src/services/reviews";
+import type { ProductReview } from "@/src/types/review";
 import { formatCurrency, formatDate } from "@/src/utils/format";
 import {
   getCountryFromHeaders,
@@ -55,10 +57,8 @@ export default async function ProductDetailsPage({
   const reviews = await getProductReviews(product.id);
   const related = products.filter((item) => item.id !== product.id).slice(0, 4);
   const bundle = products.filter((item) => item.id !== product.id).slice(0, 2);
-  const reviewCount = reviews.length;
-  const rating = reviewCount > 0
-    ? reviews.reduce((total, review) => total + review.rating, 0) / reviewCount
-    : 0;
+  const ratingSummary = getRatingSummary(reviews);
+  const { reviewCount, rating } = ratingSummary;
 
   return (
     <>
@@ -99,7 +99,7 @@ export default async function ProductDetailsPage({
               {getProductSummary(product)}
             </p>
             <p className="mt-8 text-2xl font-medium leading-[1.12] text-[#fff8df]">
-              {formatCurrency(getProductPrice(product, currency), currency)}
+              <OdometerValue value={getProductPrice(product, currency)} currency={currency} />
             </p>
             <div className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-white/10 p-4 text-sm text-violet-50">
               <p className="flex items-center justify-between gap-4">
@@ -125,10 +125,8 @@ export default async function ProductDetailsPage({
                 </p>
               )}
             </div>
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <AddToCartButton product={product} country={country} />
-            </div>
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
               <Button
                 asChild
                 variant="outline"
@@ -195,11 +193,7 @@ export default async function ProductDetailsPage({
             <h2 className="mt-3 text-2xl font-normal leading-[1.1] tracking-tight text-[#fff8df] sm:text-3xl">
               Customer ratings
             </h2>
-            <p className="mt-4 text-violet-100">
-              {reviewCount > 0
-                ? `${rating.toFixed(1)} average from ${reviewCount} customer review${reviewCount === 1 ? "" : "s"}.`
-                : "Be the first to rate this product."}
-            </p>
+            <RatingSummary summary={ratingSummary} />
           </div>
           <div className="grid min-w-0 gap-4">
             <ReviewForm productId={product.id} />
@@ -286,6 +280,89 @@ function ProductInfo({ title, items }: { title: string; items: string[] }) {
         ))}
       </div>
     </section>
+  );
+}
+
+type RatingSummaryData = {
+  rating: number;
+  reviewCount: number;
+  distribution: Array<{
+    stars: number;
+    count: number;
+    percentage: number;
+  }>;
+};
+
+function getRatingSummary(reviews: ProductReview[]): RatingSummaryData {
+  const reviewCount = reviews.length;
+  const counts = new Map<number, number>(
+    [5, 4, 3, 2, 1].map((stars) => [stars, 0]),
+  );
+
+  for (const review of reviews) {
+    const stars = Math.min(5, Math.max(1, Math.round(review.rating)));
+    counts.set(stars, (counts.get(stars) ?? 0) + 1);
+  }
+
+  const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+  const rating = reviewCount > 0 ? total / reviewCount : 0;
+
+  return {
+    rating,
+    reviewCount,
+    distribution: [5, 4, 3, 2, 1].map((stars) => {
+      const count = counts.get(stars) ?? 0;
+
+      return {
+        stars,
+        count,
+        percentage: reviewCount > 0 ? (count / reviewCount) * 100 : 0,
+      };
+    }),
+  };
+}
+
+function RatingSummary({ summary }: { summary: RatingSummaryData }) {
+  const { rating, reviewCount, distribution } = summary;
+
+  return (
+    <div className="mt-5 rounded-3xl border border-white/10 bg-white/10 p-5 text-violet-50 shadow-xl shadow-black/10">
+      <div className="grid gap-5 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center">
+        <div>
+          <p className="text-5xl font-semibold leading-none text-[#fff8df]">
+            {reviewCount > 0 ? rating.toFixed(1) : "0.0"}
+          </p>
+          <div className="mt-3 flex text-[#f6d87f]" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Star
+                key={index}
+                className={`size-4 ${index < Math.round(rating) ? "fill-current" : "text-violet-100/35"}`}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-sm text-violet-100/70">
+            {reviewCount} rating{reviewCount === 1 ? "" : "s"}
+          </p>
+        </div>
+        <div className="grid gap-2">
+          {distribution.map((item) => (
+            <div key={item.stars} className="grid grid-cols-[1.8rem_minmax(0,1fr)_2rem] items-center gap-2 text-xs text-violet-100/75">
+              <span className="font-mono">{item.stars}</span>
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[#f6d87f] transition-[width] duration-500"
+                  style={{ width: `${item.percentage}%` }}
+                />
+              </div>
+              <span className="text-right font-mono">{item.count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="mt-5 text-sm leading-6 text-violet-100/70">
+        Ratings are averaged from published customer reviews. New reviews count as soon as they are saved.
+      </p>
+    </div>
   );
 }
 

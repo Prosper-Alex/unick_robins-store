@@ -8,8 +8,9 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProductAction, updateProductAction, uploadProductImageAction } from "@/src/actions/admin-products";
-import { productCategories } from "@/src/constants/product-categories";
+import { productCategoryGroups } from "@/src/constants/product-categories";
 import type { Product } from "@/src/types/product";
+import { generateCategoryProductDescription } from "@/src/utils/product-details";
 
 const productSchema = z.object({
   title: z.string().min(2, "Title is required"),
@@ -60,7 +61,29 @@ export function ProductForm({
     },
   });
   const imageUrl = useWatch({ control: form.control, name: "image" });
+  const titleValue = useWatch({ control: form.control, name: "title" });
+  const categoryValue = useWatch({ control: form.control, name: "category" });
   const previewUrl = localPreviewUrl || (typeof imageUrl === "string" ? imageUrl : "");
+
+  function generateDescription() {
+    const title = typeof titleValue === "string" ? titleValue : "";
+    const category = typeof categoryValue === "string" ? categoryValue : "";
+
+    if (!title.trim() || !category.trim()) {
+      setStatus("Add a product title and category before generating the description.");
+      return;
+    }
+
+    const generated = generateCategoryProductDescription({
+      title,
+      category,
+      seed: product?.id ?? `${title}-${category}`,
+    });
+
+    form.setValue("short_description", generated, { shouldValidate: true });
+    form.setValue("description", generated, { shouldValidate: true });
+    setStatus("Category-matched description generated.");
+  }
 
   async function handleImageUpload(file?: File) {
     if (!file) {
@@ -159,7 +182,17 @@ export function ProductForm({
         <FormError message={form.formState.errors.short_description?.message} />
       </div>
       <div className="grid gap-2">
-        <label className="text-sm font-medium" htmlFor="description">Description</label>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="text-sm font-medium" htmlFor="description">Description</label>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 rounded-full border-white/15 bg-white/[0.08] text-white hover:bg-white/12 hover:text-white"
+            onClick={generateDescription}
+          >
+            Generate from category
+          </Button>
+        </div>
         <textarea
           id="description"
           className="min-h-28 rounded-lg border border-white/10 bg-white/[0.08] px-3 py-2 text-sm text-white outline-none transition placeholder:text-violet-100/45 focus-visible:border-[#d6b25e] focus-visible:ring-3 focus-visible:ring-[#d6b25e]/30"
@@ -192,18 +225,22 @@ export function ProductForm({
         </div>
         <div className="grid gap-2">
           <label className="text-sm font-medium" htmlFor="category">Category</label>
-          <Input
+          <select
             id="category"
-            list="product-category-options"
-            className="h-11 border-white/10 bg-white/[0.08] text-white"
-            placeholder="Hair Oil, Hair Serum, Hair Net..."
+            className="h-11 rounded-lg border border-white/10 bg-[#24102f] px-3 text-sm text-white outline-none transition focus-visible:border-[#d6b25e] focus-visible:ring-3 focus-visible:ring-[#d6b25e]/30"
             {...form.register("category")}
-          />
-          <datalist id="product-category-options">
-            {productCategories.map((category) => (
-              <option key={category} value={category} />
+          >
+            <option value="">Select category</option>
+            {productCategoryGroups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </optgroup>
             ))}
-          </datalist>
+          </select>
           <FormError message={form.formState.errors.category?.message} />
         </div>
       </div>

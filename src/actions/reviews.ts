@@ -24,7 +24,7 @@ export async function createReviewAction(input: z.input<typeof reviewSchema>) {
   const supabase = token ? getAuthenticatedSupabaseServerClient(token) : null;
   const adminSupabase = getSupabaseAdminClient();
 
-  if (!supabase || !adminSupabase || !token) {
+  if (!supabase || !token) {
     throw new Error("Sign in to leave a review.");
   }
 
@@ -37,25 +37,129 @@ export async function createReviewAction(input: z.input<typeof reviewSchema>) {
     throw new Error("Sign in to leave a review.");
   }
 
-  const verifiedPurchase = await hasVerifiedPurchase(user.id, parsed.data.productId);
-  const { error } = await adminSupabase.from("reviews").upsert({
+  const verifiedPurchase = adminSupabase
+    ? await hasVerifiedPurchase(user.id, parsed.data.productId)
+    : false;
+  const reviewPayload = {
     product_id: parsed.data.productId,
     user_id: user.id,
     title: parsed.data.title || null,
     rating: parsed.data.rating,
     body: parsed.data.body,
-    verified_purchase: verifiedPurchase,
     status: "published",
-  }, {
-    onConflict: "product_id,user_id",
-  });
+    ...(adminSupabase ? { verified_purchase: verifiedPurchase } : {}),
+  };
+  const reviewClient = adminSupabase ?? supabase;
+  const saved = await saveReviewWithoutConflictTarget(
+    reviewClient,
+    user.id,
+    parsed.data.productId,
+    reviewPayload,
+  );
 
-  if (error) {
-    throw new Error(error.message);
+  if (isMissingReviewColumnError(saved.error)) {
+    const legacyPayload = {
+      product_id: parsed.data.productId,
+      user_id: user.id,
+      rating: parsed.data.rating,
+      body: parsed.data.body,
+    };
+    const { error: legacyError } = await saveReviewWithoutConflictTarget(
+      supabase,
+      user.id,
+      parsed.data.productId,
+      legacyPayload,
+    );
+
+    if (legacyError) {
+      throw new Error(legacyError.message);
+    }
+  } else if (saved.error) {
+    throw new Error(saved.error.message);
   }
 
   revalidatePath(`/products/${parsed.data.productId}`);
   revalidatePath("/products");
+}
+
+async function saveReviewWithoutConflictTarget(
+  supabase: ReturnType<typeof getAuthenticatedSupabaseServerClient>,
+  userId: string,
+  productId: string,
+  payload: Record<string, unknown>,
+) {
+  if (!supabase) {
+    return { error: new Error("Sign in to leave a review.") };
+  }
+
+  const existing = await supabase
+    .from("reviews")
+    .select("id")
+    .eq("product_id", productId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing.error && existing.error.code !== "PGRST116") {
+    return { error: existing.error };
+  }
+
+  if (existing.data?.id) {
+    return supabase
+      .from("reviews")
+      .update(payload)
+      .eq("id", existing.data.id);
+  }
+
+  const inserted = await supabase.from("reviews").insert(payload);
+
+  if (isDuplicateReviewError(inserted.error)) {
+    return updateExistingReview(supabase, userId, productId, payload);
+  }
+
+  return inserted;
+}
+
+async function updateExistingReview(
+  supabase: ReturnType<typeof getAuthenticatedSupabaseServerClient>,
+  userId: string,
+  productId: string,
+  payload: Record<string, unknown>,
+) {
+  if (!supabase) {
+    return { error: new Error("Sign in to leave a review.") };
+  }
+
+  return supabase
+    .from("reviews")
+    .update(payload)
+    .eq("product_id", productId)
+    .eq("user_id", userId)
+    .select("id")
+    .single();
+}
+
+function isMissingReviewColumnError(error: { code?: string; message?: string } | null) {
+  if (!error) {
+    return false;
+  }
+
+  return (
+    error.code === "PGRST204" &&
+    (error.message?.includes("'status'") ||
+      error.message?.includes("'title'") ||
+      error.message?.includes("'verified_purchase'"))
+  );
+}
+
+function isDuplicateReviewError(error: { code?: string; message?: string } | null) {
+  if (!error) {
+    return false;
+  }
+
+  return (
+    error.code === "23505" ||
+    error.message?.includes('duplicate key value violates unique constraint "reviews_product_user_key"')
+  );
 }
 
 async function hasVerifiedPurchase(userId: string, productId: string) {

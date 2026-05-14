@@ -16,8 +16,12 @@ insert into public.categories (name, slug)
 values
   ('Hair Oil', 'hair-oil'),
   ('Hair Serum', 'hair-serum'),
+  ('Hair Sprays', 'hair-sprays'),
   ('Hair Net', 'hair-net'),
   ('Hair Bands', 'hair-bands'),
+  ('Caps', 'caps'),
+  ('Hoodies', 'hoodies'),
+  ('Hair Wax', 'hair-wax'),
   ('Edge Care', 'edge-care'),
   ('Leave-In Care', 'leave-in-care'),
   ('Curl Cream', 'curl-cream'),

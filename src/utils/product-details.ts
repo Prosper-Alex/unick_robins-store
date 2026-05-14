@@ -1,7 +1,92 @@
 import type { Product } from "@/src/types/product";
 
 export function getProductSummary(product: Product) {
-  return product.short_description?.trim() || product.description;
+  return product.short_description?.trim() || getDynamicProductDescription(product);
+}
+
+export function getDynamicProductDescription(product: Product) {
+  const title = product.title.trim();
+  const fallback = product.description?.trim();
+
+  return generateCategoryProductDescription({
+    title,
+    category: product.category,
+    seed: product.id,
+    fallback,
+  });
+}
+
+export function generateCategoryProductDescription({
+  title,
+  category,
+  seed = title,
+  fallback,
+}: {
+  title: string;
+  category: string;
+  seed?: string;
+  fallback?: string | null;
+}) {
+  const normalizedTitle = title.trim() || "This product";
+  const normalizedCategory = category.trim().toLowerCase();
+  const templates: Record<string, string[]> = {
+    "caps": [
+      `${normalizedTitle} brings a clean branded finish with nice fiber, structured comfort, and a refined everyday fit.`,
+      `A polished branded cap made for easy styling, soft fiber feel, and a sharp finish with casual outfits.`,
+    ],
+    "hair net": [
+      `${title} keeps styles protected with a breathable net feel, neat hold, and a smooth finish for daily wear.`,
+      `A comfortable hair net designed to secure your look without bulk, with soft tension and clean coverage.`,
+    ],
+    "hair bands": [
+      `${title} gives secure styling control with gentle stretch, polished hold, and a finish that works for daily looks.`,
+      `A neat hair band option for ponytails, buns, and protective styling with dependable comfort.`,
+    ],
+    "hoodies": [
+      `${title} adds a branded lifestyle layer with soft hand-feel, relaxed structure, and easy off-duty polish.`,
+      `A comfortable branded hoodie built for casual styling, clean texture, and everyday warmth.`,
+    ],
+    "hair oil": [
+      `${title} is a lightweight oil ritual for scalp comfort, refined shine, and a soft finish without heavy residue.`,
+      `A nourishing hair oil made to smooth dry-looking strands, support shine, and layer easily into your routine.`,
+    ],
+    "hair serum": [
+      `${title} is a high-slip serum for polished shine, reduced friction, and a smooth finish from mids to ends.`,
+      `A targeted hair serum made for sleekness, soft detangling, and a glassy finish without weighing hair down.`,
+    ],
+    "hair sprays": [
+      `${title} delivers an even finishing veil for shine, refresh, and lightweight polish across styled hair.`,
+      `A spray-led hair treatment made for quick refreshes, soft shine, and clean finish between wash days.`,
+    ],
+    "hair mist": [
+      `${title} refreshes styled hair with a fine mist, soft fragrance, and a lightweight shine veil.`,
+      `A featherlight hair mist for luminous finish, quick refresh, and touchable polish.`,
+    ],
+    "hair wax": [
+      `${title} offers sculpted control with a smooth wax finish, flexible hold, and clean definition where you need it.`,
+      `A focused hair wax for edges, parts, and shape control with a polished finish and reliable hold.`,
+    ],
+    "edge care": [
+      `${title} smooths edges with clean control, soft sheen, and a refined finish without a heavy cast.`,
+      `A targeted edge-care styler built for neat detail work, flexible hold, and polished shine.`,
+    ],
+    "leave-in care": [
+      `${title} supports daily softness with slip, moisture, and a smooth base for styling.`,
+      `A leave-in care step for easier comb-through, soft touch, and manageable texture.`,
+    ],
+    "curl cream": [
+      `${title} shapes curls with plush moisture, bounce, and soft-touch definition.`,
+      `A curl cream built for definition, smoothness, and a touchable finish across textured styles.`,
+    ],
+  };
+
+  const options = templates[normalizedCategory];
+  if (!options) {
+    return fallback || `${normalizedTitle} is selected for polished styling, reliable finish, and everyday confidence.`;
+  }
+
+  const index = Math.abs(hashString(`${seed}-${normalizedTitle}-${normalizedCategory}`)) % options.length;
+  return options[index];
 }
 
 export function getProductGallery(product: Product) {
@@ -51,4 +136,15 @@ export function getHairCompatibility(product: Product) {
   return product.hair_compatibility?.length
     ? product.hair_compatibility
     : ["Curls", "Coils", "Waves", "Silk press", "Protective styles"];
+}
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+
+  return hash;
 }

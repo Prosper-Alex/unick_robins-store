@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Camera, Mail } from "lucide-react";
+import { productCategoryGroups } from "@/src/constants/product-categories";
 
 export function Footer() {
   return (
@@ -14,7 +15,7 @@ export function Footer() {
             "linear-gradient(90deg, transparent, #f6d87f 30%, #d6b25e 60%, transparent)",
         }}
       />
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.5fr_1fr_1fr] lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1.2fr_1fr] lg:px-8">
         <div>
           <div className="mb-5 flex items-center gap-2">
             <span className="relative size-9 overflow-hidden rounded-full bg-[#f6e7b7] ring-1 ring-white/15">
@@ -48,26 +49,23 @@ export function Footer() {
               className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
               All products
             </Link>
-            <Link
-              href="/products?category=Hair%20Oil"
-              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
-              Hair Oil
-            </Link>
-            <Link
-              href="/products?category=Hair%20Serum"
-              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
-              Hair Serum
-            </Link>
-            <Link
-              href="/products?category=Hair%20Net"
-              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
-              Hair Net
-            </Link>
-            <Link
-              href="/products?category=Hair%20Bands"
-              className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
-              Hair Bands
-            </Link>
+            {productCategoryGroups.map((group) => (
+              <div key={group.label} className="grid gap-2 pt-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-100/55">
+                  {group.label}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {group.categories.map((category) => (
+                    <Link
+                      key={category}
+                      href={`/products?category=${encodeURIComponent(category)}`}
+                      className="transition hover:text-[#f6d87f] hover:underline underline-offset-4">
+                      {category}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
         <div>

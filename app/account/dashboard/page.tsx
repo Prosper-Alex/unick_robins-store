@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
-import { CreditCard, LogOut, Package, ShieldCheck, User } from "lucide-react";
+import { CreditCard, Package, ShieldCheck, User } from "lucide-react";
 import { AccountShell } from "@/components/account/account-shell";
 import { OrderList } from "@/components/account/order-list";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   return (
     <AccountShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-8">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#9a7734]">
               Account
@@ -38,12 +38,6 @@ export default async function DashboardPage() {
               Your profile
             </h1>
           </div>
-          <form action="/api/auth/logout" method="POST">
-            <Button type="submit" variant="outline" className={`rounded-full ${accountOutlineButton}`}>
-              <LogOut className="size-4" />
-              Sign out
-            </Button>
-          </form>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
