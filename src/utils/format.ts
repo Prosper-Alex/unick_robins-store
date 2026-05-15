@@ -17,3 +17,18 @@ export function formatDate(value: string) {
     year: "numeric",
   }).format(new Date(value));
 }
+
+export function maskEmail(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  const [localPart, domain] = value.split("@");
+
+  if (!localPart || !domain) {
+    return value;
+  }
+
+  const visiblePrefix = localPart.slice(0, Math.min(4, localPart.length));
+  return `${visiblePrefix}***@${domain}`;
+}

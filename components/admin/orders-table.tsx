@@ -5,7 +5,7 @@ import { Loader2, PackageCheck, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { updateOrderStatusAction } from "@/src/actions/admin-orders";
 import type { AdminOrder } from "@/src/lib/admin-data";
-import { formatCurrency, formatDate } from "@/src/utils/format";
+import { formatCurrency, formatDate, maskEmail } from "@/src/utils/format";
 
 const statuses = [
   "pending_payment",
@@ -105,7 +105,7 @@ function OrderRow({
           {formatDate(order.created_at)} · {itemCount} item{itemCount === 1 ? "" : "s"} · {formatCurrency(Number(order.total ?? 0))}
         </p>
         <p className="mt-1 truncate text-sm text-violet-100/60">
-          {order.customer_name ?? "Customer"} {order.customer_email ? `· ${order.customer_email}` : ""}
+          {order.customer_name ?? "Customer"} {order.customer_email ? `· ${maskEmail(order.customer_email)}` : ""}
         </p>
         {address && <p className="mt-1 text-sm text-violet-100/55">{address}</p>}
       </div>

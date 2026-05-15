@@ -72,10 +72,10 @@ export async function createReviewAction(input: z.input<typeof reviewSchema>) {
     );
 
     if (legacyError) {
-      throw new Error(legacyError.message);
+      throw new Error(getReviewSaveErrorMessage(legacyError));
     }
   } else if (saved.error) {
-    throw new Error(saved.error.message);
+    throw new Error(getReviewSaveErrorMessage(saved.error));
   }
 
   revalidatePath(`/products/${parsed.data.productId}`);
@@ -160,6 +160,26 @@ function isDuplicateReviewError(error: { code?: string; message?: string } | nul
     error.code === "23505" ||
     error.message?.includes('duplicate key value violates unique constraint "reviews_product_user_key"')
   );
+}
+
+function getReviewSaveErrorMessage(error: { code?: string; message?: string }) {
+  const message = error.message ?? "Review could not be saved.";
+
+  if (
+    error.code === "PGRST204" ||
+    message.includes("schema cache") ||
+    message.includes("status") ||
+    message.includes("verified_purchase") ||
+    message.includes("title")
+  ) {
+    return "Review storage is missing the latest metadata columns. Run the Supabase review metadata migration and reload the schema cache.";
+  }
+
+  if (message.includes("row-level security")) {
+    return "Review could not be saved because the reviews table policies are out of sync. Run the latest Supabase review migration.";
+  }
+
+  return message;
 }
 
 async function hasVerifiedPurchase(userId: string, productId: string) {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { formatDate, maskEmail } from "@/src/utils/format";
 import {
   Table,
   TableBody,
@@ -49,7 +50,7 @@ export function UsersTable({ users }: { users: UserRow[] }) {
         ) : (
           filteredUsers.map((user) => (
             <div key={user.id} className="rounded-xl border border-white/10 bg-white/[0.08] p-4 text-white shadow-xl shadow-black/20 backdrop-blur">
-              <p className="break-all font-medium">{user.email}</p>
+              <p className="break-all font-medium" title={user.email}>{maskEmail(user.email)}</p>
               <div className="mt-4 flex items-center justify-between gap-3">
                 <RoleSelect user={user} />
                 <span className="rounded-full bg-[#24102f] px-3 py-1 font-mono text-xs text-violet-100/75">
@@ -57,7 +58,7 @@ export function UsersTable({ users }: { users: UserRow[] }) {
                 </span>
               </div>
               <p className="mt-3 text-xs text-violet-100/60">
-                Joined {new Date(user.created_at).toLocaleDateString()}
+                Joined {formatDate(user.created_at)}
               </p>
             </div>
           ))
@@ -84,12 +85,12 @@ export function UsersTable({ users }: { users: UserRow[] }) {
             ) : (
               filteredUsers.map((user) => (
                 <TableRow key={user.id} className="border-white/10 hover:bg-white/[0.04]">
-                  <TableCell className="font-medium">{user.email}</TableCell>
+                  <TableCell className="font-medium" title={user.email}>{maskEmail(user.email)}</TableCell>
                   <TableCell>
                     <RoleSelect user={user} />
                   </TableCell>
                   <TableCell className="text-violet-100/60">
-                    {new Date(user.created_at).toLocaleDateString()}
+                    {formatDate(user.created_at)}
                   </TableCell>
                   <TableCell className="text-right font-mono tabular-nums">
                     {user.orderCount}
