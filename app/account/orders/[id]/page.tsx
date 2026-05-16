@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ReceiptText } from "lucide-react";
 import { AccountShell } from "@/components/account/account-shell";
 import { OrderStatus } from "@/components/account/order-list";
+import { ClearCartOnSuccess } from "@/components/checkout/clear-cart-on-success";
 import { Button } from "@/components/ui/button";
 import { getAccountOrder } from "@/src/lib/account-server";
 import { formatCurrency, formatDate } from "@/src/utils/format";
@@ -16,10 +17,13 @@ export const metadata = {
 
 export default async function OrderDetailsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ payment?: string }>;
 }) {
   const { id } = await params;
+  const { payment } = await searchParams;
   const { order } = await getAccountOrder(id);
 
   if (!order) {
@@ -29,6 +33,7 @@ export default async function OrderDetailsPage({
 
   return (
     <AccountShell>
+      {payment === "success" && <ClearCartOnSuccess />}
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <Button asChild variant="link" className={`mb-6 h-auto px-0 ${accountLinkButton}`}>
           <Link href="/account/orders">

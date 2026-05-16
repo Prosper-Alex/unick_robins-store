@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { forgetPendingPayment } from "@/components/checkout/payment-cart-reconciler";
 import { useCartStore } from "@/src/store/cart-store";
 
 export function ClearCartOnSuccess() {
@@ -8,6 +9,7 @@ export function ClearCartOnSuccess() {
 
   useEffect(() => {
     clearCart();
+    forgetPendingPayment();
   }, [clearCart]);
 
   return null;

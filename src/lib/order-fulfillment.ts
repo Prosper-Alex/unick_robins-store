@@ -4,6 +4,7 @@ import { toPaystackSubunit, verifyPaystackTransaction } from "@/src/lib/paystack
 type OrderForPayment = {
   id: string;
   total: number | string | null;
+  pricing_currency: string | null;
   payment_status: string | null;
   payment_reference: string | null;
 };
@@ -17,7 +18,7 @@ export async function confirmPaystackOrder(reference: string) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("id,total,payment_status,payment_reference")
+    .select("id,total,pricing_currency,payment_status,payment_reference")
     .eq("payment_reference", reference)
     .single();
 
@@ -51,6 +52,20 @@ export async function confirmPaystackOrder(reference: string) {
       .eq("id", (order as OrderForPayment).id);
 
     throw new Error("Payment amount does not match order total.");
+  }
+
+  const expectedCurrency = (order as OrderForPayment).pricing_currency;
+
+  if (expectedCurrency && payment.currency !== expectedCurrency) {
+    await supabase
+      .from("orders")
+      .update({
+        status: "payment_review",
+        payment_status: "currency_mismatch",
+      })
+      .eq("id", (order as OrderForPayment).id);
+
+    throw new Error("Payment currency does not match order currency.");
   }
 
   const { data: confirmedOrderId, error: confirmError } = await supabase.rpc("confirm_paid_order", {

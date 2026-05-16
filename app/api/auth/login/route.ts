@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authCookieNames, getAuthenticatedSupabaseServerClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
-import { isRateLimited } from "@/src/lib/rate-limit";
+import { getRateLimitKey, isRateLimited } from "@/src/lib/rate-limit";
 
 const schema = z.object({
   email: z.email().transform((value) => value.trim().toLowerCase()),
@@ -10,13 +10,21 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  // Rate limiting: 5 requests per minute
-  const ip = request.headers.get("x-forwarded-for") ?? "unknown";
-  if (isRateLimited(`login:${ip}`, 5, 60 * 1000)) {
-    return NextResponse.json({ error: "Too many login attempts. Try again later." }, { status: 429 });
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
   }
 
-  const parsed = schema.safeParse(await request.json());
+  const parsed = schema.safeParse(body);
+
+  // Rate limiting: 5 requests per minute
+  const rateLimitKey = getRateLimitKey(request, "login", parsed.success ? parsed.data.email : undefined);
+  if (isRateLimited(rateLimitKey, 5, 60 * 1000)) {
+    return NextResponse.json({ error: "Too many login attempts. Try again later." }, { status: 429 });
+  }
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });

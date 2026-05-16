@@ -1,5 +1,5 @@
 // In-memory rate limiting map
-// Maps an IP address string to { count, resetTime }
+// Maps a request identity string to { count, resetTime }
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 /**
@@ -30,4 +30,37 @@ export function isRateLimited(id: string, limit: number, windowMs: number): bool
 
   record.count += 1;
   return false;
+}
+
+export function getRateLimitKey(request: Request, scope: string, fallbackIdentity?: string): string {
+  const ip = getClientIp(request);
+
+  if (fallbackIdentity) {
+    return ip ? `${scope}:identity:${fallbackIdentity}:ip:${ip}` : `${scope}:identity:${fallbackIdentity}`;
+  }
+
+  if (ip) {
+    return `${scope}:ip:${ip}`;
+  }
+
+  return `${scope}:unknown`;
+}
+
+function getClientIp(request: Request) {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0]?.trim() || null;
+  }
+
+  const forwarded = request.headers.get("forwarded");
+  const forwardedIp = forwarded?.match(/(?:^|;)\s*for="?([^";,]+)"?/i)?.[1];
+
+  return (
+    forwardedIp?.trim() ||
+    request.headers.get("x-real-ip")?.trim() ||
+    request.headers.get("cf-connecting-ip")?.trim() ||
+    request.headers.get("true-client-ip")?.trim() ||
+    null
+  );
 }

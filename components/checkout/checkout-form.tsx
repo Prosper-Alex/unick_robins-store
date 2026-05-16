@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { CreditCard, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { rememberPendingPayment } from "@/components/checkout/payment-cart-reconciler";
 import { useCartStore } from "@/src/store/cart-store";
-import { createOrderAction } from "@/src/actions/checkout";
 import { formatCurrency } from "@/src/utils/format";
 import {
   getClientCountryFallback,
@@ -53,18 +53,40 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
 
     try {
       const formData = new FormData(event.currentTarget);
-      const result = await createOrderAction(items, {
-        email: String(formData.get("email") ?? ""),
-        firstName: String(formData.get("firstName") ?? ""),
-        lastName: String(formData.get("lastName") ?? ""),
-        phone: String(formData.get("phone") ?? ""),
-        address: String(formData.get("address") ?? ""),
-        city: String(formData.get("city") ?? ""),
-        state: String(formData.get("state") ?? ""),
-        country: String(formData.get("country") ?? ""),
-        postalCode: String(formData.get("postalCode") ?? ""),
-        deliveryMethod,
+      const response = await fetch("/api/initialize-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items,
+          details: {
+            email: String(formData.get("email") ?? ""),
+            firstName: String(formData.get("firstName") ?? ""),
+            lastName: String(formData.get("lastName") ?? ""),
+            phone: String(formData.get("phone") ?? ""),
+            address: String(formData.get("address") ?? ""),
+            city: String(formData.get("city") ?? ""),
+            state: String(formData.get("state") ?? ""),
+            country: String(formData.get("country") ?? ""),
+            postalCode: String(formData.get("postalCode") ?? ""),
+            deliveryMethod,
+          },
+        }),
       });
+      const result = (await response.json()) as {
+        authorizationUrl?: string;
+        reference?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !result.authorizationUrl) {
+        throw new Error(result.error ?? "Unable to initialize payment.");
+      }
+
+      if (result.reference) {
+        rememberPendingPayment(result.reference);
+      }
 
       window.location.href = result.authorizationUrl;
     } catch (err) {
