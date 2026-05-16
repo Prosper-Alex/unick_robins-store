@@ -20,11 +20,12 @@ export function AuthForm({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const isOtpStep = mode === "register" && pendingVerificationEmail !== null;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,10 +54,32 @@ export function AuthForm({
       }
 
       if (mode === "register") {
-        const validationMessage = validateNewPassword(
-          password,
-          confirmPassword,
-        );
+        if (isOtpStep) {
+          const response = await fetch("/api/auth/verify-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: pendingVerificationEmail, token: otp }),
+          });
+          const result = (await response.json()) as {
+            error?: string;
+            role?: string;
+          };
+
+          if (!response.ok) {
+            setMessage(result.error ?? "Verification failed.");
+            return;
+          }
+
+          if (result.role === "admin") {
+            router.replace("/admin");
+          } else {
+            router.replace("/products");
+          }
+
+          return;
+        }
+
+        const validationMessage = validateNewPassword(password);
 
         if (validationMessage) {
           setMessage(validationMessage);
@@ -73,7 +96,7 @@ export function AuthForm({
         error?: string;
         message?: string;
         role?: string;
-        requiresEmailConfirmation?: boolean;
+        requiresEmailOtpVerification?: boolean;
       };
 
       if (!response.ok) {
@@ -81,14 +104,13 @@ export function AuthForm({
         return;
       }
 
-      if (result.requiresEmailConfirmation) {
+      if (result.requiresEmailOtpVerification) {
+        setPendingVerificationEmail(normalizedEmail);
         setMessage(
           result.message ??
-            "Account created. Check your email inbox before signing in.",
+            "Account created. Check your email for the one-time code before signing in.",
         );
-        setMode("login");
         setPassword("");
-        setConfirmPassword("");
         return;
       }
 
@@ -117,11 +139,12 @@ export function AuthForm({
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
+          disabled={isOtpStep}
           className={authInputClassName}
         />
       </div>
 
-      {mode !== "forgot_password" && (
+      {mode !== "forgot_password" && !isOtpStep && (
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <label htmlFor="password" className="text-sm font-medium">
@@ -149,21 +172,28 @@ export function AuthForm({
         </div>
       )}
 
-      {mode === "register" && (
+      {mode === "register" && !isOtpStep && (
+        <p className="text-xs leading-5 text-violet-100">
+          Use 8+ characters with uppercase, lowercase, and a number or symbol.
+        </p>
+      )}
+
+      {isOtpStep && (
         <div className="grid gap-2">
-          <label htmlFor="confirmPassword" className="text-sm font-medium">
-            Confirm password
+          <label htmlFor="otp" className="text-sm font-medium">
+            Verify OTP
           </label>
-          <PasswordInput
-            id="confirmPassword"
-            autoComplete="new-password"
-            show={showConfirmPassword}
-            toggleShow={() => setShowConfirmPassword((current) => !current)}
-            value={confirmPassword}
-            onChange={setConfirmPassword}
+          <Input
+            id="otp"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            value={otp}
+            onChange={(event) => setOtp(event.target.value)}
+            className={authInputClassName}
           />
           <p className="text-xs leading-5 text-violet-100">
-            Use 8+ characters with uppercase, lowercase, and a number or symbol.
+            Enter the verification code sent to {pendingVerificationEmail}.
           </p>
         </div>
       )}
@@ -186,7 +216,9 @@ export function AuthForm({
           ? "Send reset link"
           : mode === "login"
             ? "Sign in"
-            : "Create account"}
+            : isOtpStep
+              ? "Verify OTP"
+              : "Create account"}
       </Button>
     </form>
   );
@@ -230,11 +262,7 @@ function PasswordInput({
   );
 }
 
-function validateNewPassword(password: string, confirmPassword: string) {
-  if (password !== confirmPassword) {
-    return "Passwords do not match.";
-  }
-
+function validateNewPassword(password: string) {
   if (password.length < 8) {
     return "Password must be at least 8 characters long.";
   }

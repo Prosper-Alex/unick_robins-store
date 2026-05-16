@@ -53,8 +53,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       user: data.user,
       role: "customer",
-      requiresEmailConfirmation: true,
-      message: "Account created. Check your email inbox and confirm your address before signing in.",
+      requiresEmailOtpVerification: true,
+      message: "Account created. Check your email for the one-time code before signing in.",
     });
   }
 

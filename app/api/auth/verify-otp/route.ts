@@ -6,7 +6,7 @@ import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-ser
 
 const schema = z.object({
   email: z.email().transform((value) => value.trim().toLowerCase()),
-  password: z.string().min(6),
+  token: z.string().trim().min(6, "Enter the verification code."),
 });
 
 export async function POST(request: Request) {
@@ -15,13 +15,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
+    return NextResponse.json({ error: "Enter a valid verification code." }, { status: 400 });
   }
 
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
+    return NextResponse.json({ error: "Enter a valid verification code." }, { status: 400 });
   }
 
   const supabase = getSupabaseServerClient();
@@ -30,13 +30,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: parsed.data.email,
+    token: parsed.data.token,
+    type: "signup",
+  });
 
-  if (error || !data.session) {
-    return NextResponse.json({ error: getLoginErrorMessage(error?.message) }, { status: 401 });
+  if (error || !data.session || !data.user) {
+    return NextResponse.json({ error: error?.message ?? "Verification failed." }, { status: 400 });
   }
 
+  const { role } = await ensureUserProfile(data.user, data.session.access_token);
   const cookieStore = await cookies();
+
   cookieStore.set(authCookieNames.access, data.session.access_token, {
     httpOnly: true,
     sameSite: "lax",
@@ -52,21 +58,5 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24 * 30,
   });
 
-  const { role } = await ensureUserProfile(data.user, data.session.access_token);
-
   return NextResponse.json({ user: data.user, role });
-}
-
-function getLoginErrorMessage(message?: string) {
-  const normalized = message?.toLowerCase() ?? "";
-
-  if (normalized.includes("email not confirmed")) {
-    return "Verify your email before signing in. Check your inbox for the one-time code.";
-  }
-
-  if (normalized.includes("invalid login credentials")) {
-    return "We could not recognize that email and password combination.";
-  }
-
-  return message ?? "Login failed.";
 }
