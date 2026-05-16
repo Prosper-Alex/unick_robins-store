@@ -1,17 +1,13 @@
-import { headers } from "next/headers";
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { Footer } from "@/components/shared/footer";
 import { Navbar } from "@/components/shared/navbar";
-import { getCountryFromHeaders } from "@/src/utils/pricing";
 
 export const metadata = {
   title: "Secure Checkout | Unick Robins",
   description: "Complete your Unick Robins order securely.",
 };
 
-export default async function CheckoutPage() {
-  const country = getCountryFromHeaders(await headers());
-
+export default function CheckoutPage() {
   return (
     <>
       <Navbar />
@@ -25,7 +21,7 @@ export default async function CheckoutPage() {
               Secure payment
             </h1>
           </div>
-          <CheckoutForm initialCountry={country} />
+          <CheckoutForm />
         </div>
       </main>
       <Footer />

@@ -6,6 +6,11 @@ const refreshCookie = "ur-refresh-token";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (!pathname.startsWith("/admin")) {
+    return NextResponse.next();
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -126,8 +131,5 @@ function redirectToLogin(request: NextRequest, response: NextResponse) {
 }
 
 export const config = {
-  matcher: [
-    // Apply proxy to all routes except static assets and API routes
-    "/((?!_next/static|_next/image|favicon.ico|api).*)",
-  ],
+  matcher: ["/admin/:path*"],
 };

@@ -2,11 +2,12 @@
 
 import { ShoppingBag } from "lucide-react";
 import type { MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { throwProductToCart } from "@/components/product/cart-throw-animation";
 import { useCartStore } from "@/src/store/cart-store";
 import type { Product } from "@/src/types/product";
-import { getDisplayCurrencyForCountry, localizeProduct } from "@/src/utils/pricing";
+import { getClientCountryFallback, getDisplayCurrencyForCountry, localizeProduct } from "@/src/utils/pricing";
 
 export function AddToCartButton({
   product,
@@ -17,7 +18,18 @@ export function AddToCartButton({
 }) {
   const addItem = useCartStore((state) => state.addItem);
   const inStock = product.stock > 0;
-  const currency = getDisplayCurrencyForCountry(country);
+  const [resolvedCountry, setResolvedCountry] = useState(country);
+  const currency = getDisplayCurrencyForCountry(resolvedCountry);
+
+  useEffect(() => {
+    if (!country) {
+      const frame = window.requestAnimationFrame(() => {
+        setResolvedCountry(getClientCountryFallback());
+      });
+
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [country]);
 
   function addSelection(event: MouseEvent<HTMLButtonElement>) {
     const localizedProduct = localizeProduct(product, currency);

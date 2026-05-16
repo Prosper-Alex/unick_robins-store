@@ -1,17 +1,11 @@
-import { headers } from "next/headers";
+import { Suspense } from "react";
 import { Footer } from "@/components/shared/footer";
 import { Navbar } from "@/components/shared/navbar";
 import { ProductCatalog } from "@/components/product/product-catalog";
+import { ProductSkeleton } from "@/components/product/product-skeleton";
 import { getProducts } from "@/src/services/products";
-import { getCountryFromHeaders } from "@/src/utils/pricing";
 
-export default async function ProductsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string }>;
-}) {
-  const params = await searchParams;
-  const country = getCountryFromHeaders(await headers());
+export default async function ProductsPage() {
   const products = await getProducts();
 
   return (
@@ -30,7 +24,9 @@ export default async function ProductsPage({
               Search, filter, and build the ritual that matches your crown care routine.
             </p>
           </div>
-          <ProductCatalog products={products} initialCategory={params.category ?? "All"} country={country} />
+          <Suspense fallback={<ProductSkeleton />}>
+            <ProductCatalog products={products} />
+          </Suspense>
         </section>
       </main>
       <Footer />

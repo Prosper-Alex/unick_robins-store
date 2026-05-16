@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, Heart, PackageCheck, ShoppingBag, Sparkles, Star } from "lucide-react";
 import type { MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -21,6 +22,7 @@ import type { Product } from "@/src/types/product";
 import { formatCurrency } from "@/src/utils/format";
 import {
   getDisplayCurrencyForCountry,
+  getClientCountryFallback,
   getProductPrice,
   localizeProduct,
   type StoreCurrency,
@@ -44,11 +46,22 @@ export function ProductCard({
   const addItem = useCartStore((state) => state.addItem);
   const toggleWishlist = useWishlistStore((state) => state.toggle);
   const isWishlisted = useWishlistStore((state) => state.has(product.id));
+  const [resolvedCountry, setResolvedCountry] = useState(country);
   const rating = getRating(product);
   const reviewCount = getReviewCount(product);
   const inStock = product.stock > 0;
-  const currency = getDisplayCurrencyForCountry(country);
+  const currency = getDisplayCurrencyForCountry(resolvedCountry);
   const displayPrice = getProductPrice(product, currency);
+
+  useEffect(() => {
+    if (!country) {
+      const frame = window.requestAnimationFrame(() => {
+        setResolvedCountry(getClientCountryFallback());
+      });
+
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [country]);
 
   function addProduct(event: MouseEvent<HTMLButtonElement>) {
     addItem(localizeProduct(product, currency));

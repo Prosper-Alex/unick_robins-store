@@ -1,9 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { authCookieNames, getAuthenticatedSupabaseServerClient, getSupabaseAdminClient } from "@/src/lib/supabase-server";
+import { PRODUCT_CACHE_TAG } from "@/src/services/products";
+import { REVIEW_CACHE_TAG } from "@/src/services/reviews";
 
 const reviewSchema = z.object({
   productId: z.uuid(),
@@ -78,6 +80,8 @@ export async function createReviewAction(input: z.input<typeof reviewSchema>) {
     throw new Error(getReviewSaveErrorMessage(saved.error));
   }
 
+  revalidateTag(PRODUCT_CACHE_TAG, "max");
+  revalidateTag(REVIEW_CACHE_TAG, "max");
   revalidatePath(`/products/${parsed.data.productId}`);
   revalidatePath("/products");
 }

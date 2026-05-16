@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authCookieNames, getAuthenticatedSupabaseServerClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
-import { getRateLimitKey, isRateLimited } from "@/src/lib/rate-limit";
+import { ensureUserProfile } from "@/src/lib/auth-profile";
+import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
 
 const schema = z.object({
   email: z.email().transform((value) => value.trim().toLowerCase()),
@@ -20,12 +20,6 @@ export async function POST(request: Request) {
 
   const parsed = schema.safeParse(body);
 
-  // Rate limiting: 5 requests per minute
-  const rateLimitKey = getRateLimitKey(request, "login", parsed.success ? parsed.data.email : undefined);
-  if (isRateLimited(rateLimitKey, 5, 60 * 1000)) {
-    return NextResponse.json({ error: "Too many login attempts. Try again later." }, { status: 429 });
-  }
-
   if (!parsed.success) {
     return NextResponse.json({ error: "Enter a valid email and password." }, { status: 400 });
   }
@@ -39,7 +33,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error || !data.session) {
-    return NextResponse.json({ error: error?.message ?? "Login failed." }, { status: 401 });
+    return NextResponse.json({ error: getLoginErrorMessage(error?.message) }, { status: 401 });
   }
 
   const cookieStore = await cookies();
@@ -58,20 +52,21 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24 * 30,
   });
 
-  // Fetch the role
-  const authenticatedSupabase = getAuthenticatedSupabaseServerClient(data.session.access_token);
-
-  if (!authenticatedSupabase) {
-    return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
-  }
-
-  const { data: userData } = await authenticatedSupabase
-    .from("users")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  const role = userData?.role || "customer";
+  const { role } = await ensureUserProfile(data.user, data.session.access_token);
 
   return NextResponse.json({ user: data.user, role });
+}
+
+function getLoginErrorMessage(message?: string) {
+  const normalized = message?.toLowerCase() ?? "";
+
+  if (normalized.includes("email not confirmed")) {
+    return "Confirm your email address before signing in. Check your inbox for the confirmation link.";
+  }
+
+  if (normalized.includes("invalid login credentials")) {
+    return "We could not recognize that email and password combination.";
+  }
+
+  return message ?? "Login failed.";
 }

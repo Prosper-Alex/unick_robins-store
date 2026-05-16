@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,8 +19,9 @@ export function ProductCatalog({
   initialCategory?: string;
   country?: string | null;
 }) {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState(initialCategory);
+  const [category, setCategory] = useState(searchParams.get("category") ?? initialCategory);
   const [page, setPage] = useState(1);
   const categories = ["All", ...Array.from(new Set(products.map((product) => product.category)))];
 

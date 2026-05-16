@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -23,7 +22,6 @@ import { getProductReviews } from "@/src/services/reviews";
 import type { ProductReview } from "@/src/types/review";
 import { formatCurrency, formatDate } from "@/src/utils/format";
 import {
-  getCountryFromHeaders,
   getDisplayCurrencyForCountry,
   getProductPrice,
 } from "@/src/utils/pricing";
@@ -39,14 +37,21 @@ import {
   isTransferReady,
 } from "@/src/utils/product-details";
 
+export async function generateStaticParams() {
+  const products = await getProducts();
+
+  return products.map((product) => ({
+    id: product.id,
+  }));
+}
+
 export default async function ProductDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const country = getCountryFromHeaders(await headers());
-  const currency = getDisplayCurrencyForCountry(country);
+  const currency = getDisplayCurrencyForCountry();
   const product = await getProductById(id);
 
   if (!product) {
@@ -126,7 +131,7 @@ export default async function ProductDetailsPage({
               )}
             </div>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <AddToCartButton product={product} country={country} />
+              <AddToCartButton product={product} />
               <Button
                 asChild
                 variant="outline"
@@ -255,7 +260,7 @@ export default async function ProductDetailsPage({
           </h2>
           <div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:gap-x-8">
             {related.map((item) => (
-              <ProductCard key={item.id} product={item} country={country} />
+              <ProductCard key={item.id} product={item} />
             ))}
           </div>
         </section>

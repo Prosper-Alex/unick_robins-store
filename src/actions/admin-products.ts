@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
+import { PRODUCT_CACHE_TAG } from "@/src/services/products";
 import type { Product, ProductInput } from "@/src/types/product";
 
 async function verifyAdmin() {
@@ -88,6 +89,7 @@ export async function createProductAction(input: ProductInput): Promise<Product>
   }
 
   await logAudit(supabase, user.id, "create", "product", data.id, { title: input.title });
+  revalidateTag(PRODUCT_CACHE_TAG, "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
   
@@ -120,6 +122,7 @@ export async function updateProductAction(id: string, input: ProductInput): Prom
   }
 
   await logAudit(supabase, user.id, "update", "product", id, { title: input.title });
+  revalidateTag(PRODUCT_CACHE_TAG, "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
 
@@ -136,6 +139,7 @@ export async function deleteProductAction(id: string): Promise<void> {
   }
 
   await logAudit(supabase, user.id, "delete", "product", id);
+  revalidateTag(PRODUCT_CACHE_TAG, "max");
   revalidatePath("/admin/products");
   revalidatePath("/products");
 }
