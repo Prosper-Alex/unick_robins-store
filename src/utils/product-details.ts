@@ -20,7 +20,9 @@ const apparelCategoryMatchers = [
 ];
 
 export function getProductSummary(product: Product) {
-  return product.short_description?.trim() || getDynamicProductDescription(product);
+  return (
+    product.short_description?.trim() || getDynamicProductDescription(product)
+  );
 }
 
 export function getDynamicProductDescription(product: Product) {
@@ -49,7 +51,7 @@ export function generateCategoryProductDescription({
   const normalizedTitle = title.trim() || "This product";
   const normalizedCategory = category.trim().toLowerCase();
   const templates: Record<string, string[]> = {
-    "caps": [
+    caps: [
       `${normalizedTitle} brings a clean branded finish with nice fiber, structured comfort, and a refined everyday fit.`,
       `A polished branded cap made for easy styling, soft fiber feel, and a sharp finish with casual outfits.`,
     ],
@@ -61,7 +63,7 @@ export function generateCategoryProductDescription({
       `${title} gives secure styling control with gentle stretch, polished hold, and a finish that works for daily looks.`,
       `A neat hair band option for ponytails, buns, and protective styling with dependable comfort.`,
     ],
-    "hoodies": [
+    hoodies: [
       `${title} adds a branded lifestyle layer with soft hand-feel, relaxed structure, and easy off-duty polish.`,
       `A comfortable branded hoodie built for casual styling, clean texture, and everyday warmth.`,
     ],
@@ -101,10 +103,15 @@ export function generateCategoryProductDescription({
 
   const options = templates[normalizedCategory];
   if (!options) {
-    return fallback || `${normalizedTitle} is selected for polished styling, reliable finish, and everyday confidence.`;
+    return (
+      fallback ||
+      `${normalizedTitle} is selected for polished styling, reliable finish, and everyday confidence.`
+    );
   }
 
-  const index = Math.abs(hashString(`${seed}-${normalizedTitle}-${normalizedCategory}`)) % options.length;
+  const index =
+    Math.abs(hashString(`${seed}-${normalizedTitle}-${normalizedCategory}`)) %
+    options.length;
   return options[index];
 }
 
@@ -140,25 +147,41 @@ export function getIngredients(product: Product) {
 
   return product.ingredients?.length
     ? product.ingredients
-    : ["Botanical oils", "Amino shine complex", "Soft-touch conditioning esters"];
+    : [
+        "Botanical oils",
+        "Amino shine complex",
+        "Soft-touch conditioning esters",
+      ];
 }
 
 export function getBenefits(product: Product) {
   if (isApparelOrAccessory(product.category)) {
     return product.benefits?.length
       ? product.benefits
-      : ["Protects styled hair", "Supports heat retention", "Finishes everyday looks with polish"];
+      : [
+          "Protects styled hair",
+          "Supports heat retention",
+          "Finishes everyday looks with polish",
+        ];
   }
 
   return product.benefits?.length
     ? product.benefits
-    : ["Builds visible polish", "Softens without weight", "Supports a refined daily ritual"];
+    : [
+        "Builds visible polish",
+        "Softens without weight",
+        "Supports a refined daily ritual",
+      ];
 }
 
 export function getUsageInstructions(product: Product) {
   return product.usage_instructions?.length
     ? product.usage_instructions
-    : ["Apply to clean or refreshed hair.", "Work through mids, ends, or targeted areas.", "Layer as needed for extra finish."];
+    : [
+        "Apply to clean or refreshed hair.",
+        "Work through mids, ends, or targeted areas.",
+        "Layer as needed for extra finish.",
+      ];
 }
 
 export function getHairCompatibility(product: Product) {
@@ -167,7 +190,9 @@ export function getHairCompatibility(product: Product) {
     : ["Curls", "Coils", "Waves", "Silk press", "Protective styles"];
 }
 
-export function getProductDetailSections(product: Product): ProductDetailSection[] {
+export function getProductDetailSections(
+  product: Product,
+): ProductDetailSection[] {
   if (isApparelOrAccessory(product.category)) {
     return [
       {
@@ -200,13 +225,19 @@ export function getProductDetailSections(product: Product): ProductDetailSection
 export function isApparelOrAccessory(category: string) {
   const normalizedCategory = category.trim().toLowerCase();
 
-  return apparelCategoryMatchers.some((matcher) => normalizedCategory.includes(matcher));
+  return apparelCategoryMatchers.some((matcher) =>
+    normalizedCategory.includes(matcher),
+  );
 }
 
 function getMaterialIngredients(product: Product) {
   return product.ingredients?.length
     ? product.ingredients
-    : ["Soft-touch fabric or fiber", "Comfortable everyday structure", "Gentle finish for styled hair"];
+    : [
+        "Soft-touch fabric or fiber",
+        "Comfortable everyday structure",
+        "Gentle finish for styled hair",
+      ];
 }
 
 function hashString(value: string) {
