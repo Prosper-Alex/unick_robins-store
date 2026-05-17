@@ -18,7 +18,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = schema.safeParse(await request.json());
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Enter a valid email address." },
+      { status: 400 },
+    );
+  }
+
+  const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json(
