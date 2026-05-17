@@ -15,14 +15,37 @@ import {
   getShippingFee,
 } from "@/src/utils/pricing";
 
-export function CheckoutForm({ initialCountry }: { initialCountry?: string | null }) {
+const callingCodes = [
+  { value: "+234", label: "+234", country: "NG" },
+  { value: "+233", label: "+233", country: "GH" },
+  { value: "+254", label: "+254", country: "KE" },
+  { value: "+27", label: "+27", country: "ZA" },
+  { value: "+255", label: "+255", country: "TZ" },
+  { value: "+256", label: "+256", country: "UG" },
+  { value: "+250", label: "+250", country: "RW" },
+  { value: "+225", label: "+225", country: "CI" },
+  { value: "+237", label: "+237", country: "CM" },
+  { value: "+1", label: "+1", country: "US/CA" },
+  { value: "+44", label: "+44", country: "UK" },
+];
+
+export function CheckoutForm({
+  initialCountry,
+}: {
+  initialCountry?: string | null;
+}) {
   const router = useRouter();
   const { items } = useCartStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
-  const [country, setCountry] = useState(initialCountry === "NG" ? "Nigeria" : initialCountry ?? "");
+  const [country, setCountry] = useState(
+    initialCountry === "NG" ? "Nigeria" : (initialCountry ?? ""),
+  );
+  const [phoneCountryCode, setPhoneCountryCode] = useState(
+    initialCountry === "NG" ? "+234" : "+1",
+  );
   const currency = getDisplayCurrencyForCountry(country);
 
   useEffect(() => {
@@ -31,6 +54,7 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
         const fallbackCountry = getClientCountryFallback();
         if (fallbackCountry === "NG") {
           setCountry("Nigeria");
+          setPhoneCountryCode("+234");
         }
       }
       setMounted(true);
@@ -53,6 +77,11 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
 
     try {
       const formData = new FormData(event.currentTarget);
+      const localPhoneNumber = String(formData.get("phoneNumber") ?? "").trim();
+      const selectedPhoneCountryCode = String(
+        formData.get("phoneCountryCode") ?? phoneCountryCode,
+      ).trim();
+      const phone = `${selectedPhoneCountryCode} ${localPhoneNumber}`.trim();
       const response = await fetch("/api/initialize-payment", {
         method: "POST",
         headers: {
@@ -64,7 +93,7 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
             email: String(formData.get("email") ?? ""),
             firstName: String(formData.get("firstName") ?? ""),
             lastName: String(formData.get("lastName") ?? ""),
-            phone: String(formData.get("phone") ?? ""),
+            phone,
             address: String(formData.get("address") ?? ""),
             city: String(formData.get("city") ?? ""),
             state: String(formData.get("state") ?? ""),
@@ -116,10 +145,14 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
+    <form
+      onSubmit={submit}
+      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
       <div className="space-y-6">
         <div className="rounded-3xl border border-white/10 bg-white/97 p-4 shadow-xl shadow-black/10 sm:p-6">
-          <h2 className="mb-4 text-xl font-medium text-[#24102f]">Shipping Information</h2>
+          <h2 className="mb-4 text-xl font-medium text-[#24102f]">
+            Shipping Information
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <label className="text-sm font-medium">First name</label>
@@ -151,13 +184,33 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Phone</label>
-              <Input
-                name="phone"
-                type="tel"
-                autoComplete="tel"
-                required
-                className="rounded-xl"
-              />
+              <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-2">
+                <select
+                  name="phoneCountryCode"
+                  autoComplete="tel-country-code"
+                  value={phoneCountryCode}
+                  onChange={(event) => setPhoneCountryCode(event.target.value)}
+                  className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  aria-label="Phone country code">
+                  {callingCodes.map((code) => (
+                    <option
+                      className="mt-0.5"
+                      key={code.value}
+                      value={code.value}>
+                      {code.label} {code.country}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  name="phoneNumber"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  placeholder="Phone number"
+                  required
+                  className="rounded-xl"
+                />
+              </div>
             </div>
             <div className="grid gap-2 sm:col-span-2">
               <label className="text-sm font-medium">Address</label>
@@ -210,7 +263,9 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
         </div>
 
         <div className="rounded-3xl border border-white/10 bg-white/97 p-4 shadow-xl shadow-black/10 sm:p-6">
-          <h2 className="mb-4 text-xl font-medium text-[#24102f]">Delivery & Payment</h2>
+          <h2 className="mb-4 text-xl font-medium text-[#24102f]">
+            Delivery & Payment
+          </h2>
           <div className="grid gap-4">
             <label className="grid cursor-pointer gap-2 rounded-2xl border border-stone-200 bg-white p-4 has-checked:border-[#d6b25e] has-checked:bg-[#fff8df]">
               <span className="flex flex-wrap items-center justify-between gap-2">
@@ -232,7 +287,10 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
               <span className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">Express delivery</span>
                 <span className="text-sm text-stone-500">
-                  {formatCurrency(getShippingFee(currency, "express"), currency)}
+                  {formatCurrency(
+                    getShippingFee(currency, "express"),
+                    currency,
+                  )}
                 </span>
               </span>
               <span className="flex items-start gap-3 text-sm leading-6 text-stone-500">
@@ -270,12 +328,17 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
           <h2 className="mb-4 text-lg font-medium">Order Summary</h2>
           <div className="space-y-4 mb-6">
             {items.map((item) => (
-              <div key={item.id} className="grid grid-cols-[1fr_auto] gap-3 text-sm">
+              <div
+                key={item.id}
+                className="grid grid-cols-[1fr_auto] gap-3 text-sm">
                 <span className="min-w-0 text-stone-600">
                   {item.quantity}x {item.title}
                 </span>
                 <span className="whitespace-nowrap font-medium">
-                  {formatCurrency(getProductPrice(item, currency) * item.quantity, currency)}
+                  {formatCurrency(
+                    getProductPrice(item, currency) * item.quantity,
+                    currency,
+                  )}
                 </span>
               </div>
             ))}
@@ -283,12 +346,16 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
           <div className="space-y-2 border-t border-stone-200 pt-4 text-sm">
             <div className="flex justify-between">
               <span className="text-stone-500">Subtotal</span>
-              <span className="font-medium">{formatCurrency(subtotal, currency)}</span>
+              <span className="font-medium">
+                {formatCurrency(subtotal, currency)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Shipping</span>
               <span className="font-medium">
-                {shippingFee > 0 ? formatCurrency(shippingFee, currency) : "Free"}
+                {shippingFee > 0
+                  ? formatCurrency(shippingFee, currency)
+                  : "Free"}
               </span>
             </div>
           </div>
@@ -311,7 +378,8 @@ export function CheckoutForm({ initialCountry }: { initialCountry?: string | nul
               <Loader2 className="animate-spin" />
             ) : (
               <>
-                <CreditCard className="size-5" /> Pay {formatCurrency(total, currency)}
+                <CreditCard className="size-5" /> Pay{" "}
+                {formatCurrency(total, currency)}
               </>
             )}
           </Button>

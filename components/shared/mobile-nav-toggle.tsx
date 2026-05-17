@@ -103,12 +103,7 @@ export function MobileNavToggle({
                     </span>
                   )}
                   <span className="flex-1">{link.label}</span>
-                  <MobileLinkPendingIndicator />
-                  {active && (
-                    <span className="rounded-full bg-[#24102f]/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em]">
-                      Current
-                    </span>
-                  )}
+                  <MobileLinkEndState active={active} />
                 </Link>
               </SheetClose>
             );
@@ -120,18 +115,29 @@ export function MobileNavToggle({
   );
 }
 
-function MobileLinkPendingIndicator() {
+function MobileLinkEndState({ active }: { active: boolean }) {
   const { pending } = useLinkStatus();
 
+  if (!active && !pending) {
+    return null;
+  }
+
   return (
-    <span
-      aria-hidden="true"
-      className={`flex size-4 shrink-0 items-center justify-center transition-opacity ${
-        pending ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <Loader2 className="size-3.5 animate-spin" />
-    </span>
+    <>
+      {pending && (
+        <span
+          aria-hidden="true"
+          className="flex size-4 shrink-0 items-center justify-center"
+        >
+          <Loader2 className="size-3.5 animate-spin" />
+        </span>
+      )}
+      {active && (
+        <span className="rounded-full bg-[#24102f]/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em]">
+          Current
+        </span>
+      )}
+    </>
   );
 }
 

@@ -2,7 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, Heart, PackageCheck, ShoppingBag, Sparkles, Star } from "lucide-react";
+import {
+  Eye,
+  Heart,
+  PackageCheck,
+  ShoppingBag,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -69,8 +76,10 @@ export function ProductCard({
   }
 
   return (
-    <Card className="card-lift group relative h-full w-full overflow-hidden rounded-2xl border-white/10 bg-white/[0.97] p-0 shadow-sm shadow-black/10">
-      <Link href={`/products/${product.id}`} className="relative z-0 block aspect-[4/5] min-h-[260px] overflow-hidden bg-violet-50 sm:min-h-0">
+    <Card className="card-lift group relative h-full w-full overflow-hidden rounded-2xl border-white/10 bg-white/97 p-0 shadow-sm shadow-black/10">
+      <Link
+        href={`/products/${product.id}`}
+        className="relative z-0 block aspect-4/5 min-h-60px overflow-hidden bg-violet-50 sm:min-h-0">
         <Image
           src={product.image}
           alt={product.title}
@@ -83,9 +92,12 @@ export function ProductCard({
           {product.category}
         </span>
         {/* Stock badge */}
-        <span className={`absolute bottom-3 left-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-sm sm:bottom-4 sm:left-4 ${
-          inStock ? "bg-emerald-50/90 text-emerald-800" : "bg-rose-50/90 text-rose-800"
-        }`}>
+        <span
+          className={`absolute bottom-3 left-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-sm sm:bottom-4 sm:left-4 ${
+            inStock
+              ? "bg-emerald-50/90 text-emerald-800"
+              : "bg-rose-50/90 text-rose-800"
+          }`}>
           {inStock ? `${product.stock} in stock` : "Sold out"}
         </span>
       </Link>
@@ -96,39 +108,47 @@ export function ProductCard({
           type="button"
           className="flex size-9 items-center justify-center rounded-full bg-[#fff8df]/95 text-[#4b1f61] shadow-sm backdrop-blur-sm transition hover:scale-110 hover:text-[#9f1239]"
           aria-label={`Wishlist ${product.title}`}
-          onClick={() => toggleWishlist(product.id)}
-        >
-          <Heart className={`size-4 ${isWishlisted ? "fill-current text-[#9f1239]" : ""}`} />
+          onClick={() => toggleWishlist(product.id)}>
+          <Heart
+            className={`size-4 ${isWishlisted ? "fill-current text-[#9f1239]" : ""}`}
+          />
         </button>
         <Dialog>
           <DialogTrigger asChild>
             <button
               type="button"
               className="flex size-9 items-center justify-center rounded-full bg-[#fff8df]/95 text-[#4b1f61] shadow-sm backdrop-blur-sm transition hover:scale-110 sm:opacity-0 sm:group-hover:opacity-100"
-              aria-label={`Quick preview ${product.title}`}
-            >
+              aria-label={`Quick preview ${product.title}`}>
               <Eye className="size-4" />
             </button>
           </DialogTrigger>
-          <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-2xl">
+          <DialogContent className="mt-6 max-h-[88svh] overflow-y-auto sm:mt-0 sm:max-h-[92svh] sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>{product.title}</DialogTitle>
               <DialogDescription>
-                Quick preview of {product.title}, including product summary and key attributes.
+                Quick preview of {product.title}, including product summary and
+                key attributes.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-5 sm:grid-cols-[minmax(160px,220px)_1fr]">
-              <div className="relative aspect-[4/5] max-h-[360px] overflow-hidden rounded-2xl bg-violet-100">
-                <Image src={product.image} alt={product.title} fill sizes="220px" className="object-cover" />
+              <div className="relative mx-auto aspect-4/3 max-h-60 w-full max-w-[320px] overflow-hidden rounded-2xl bg-violet-100 sm:mx-0 sm:aspect-4/5 sm:max-h-90 sm:max-w-none">
+                <Image
+                  src={product.image}
+                  alt={product.title}
+                  fill
+                  sizes="(min-width: 640px) 220px, 100vw"
+                  className="object-cover"
+                />
               </div>
               <div className="grid content-start gap-4">
-                <p className="text-sm leading-6 text-[#65526d]">{getProductSummary(product)}</p>
+                <p className="text-sm leading-6 text-[#65526d]">
+                  {getProductSummary(product)}
+                </p>
                 <ProductMeta product={product} />
                 <Button
                   className="w-fit rounded-full bg-[#4b1f61] text-white hover:bg-[#371647] hover:text-white active:bg-[#2d1039] disabled:bg-[#6f5b78] disabled:text-white"
                   onClick={addProduct}
-                  disabled={!inStock}
-                >
+                  disabled={!inStock}>
                   <ShoppingBag /> Add to cart
                 </Button>
               </div>
@@ -139,7 +159,9 @@ export function ProductCard({
 
       <CardContent className="grid gap-3 p-4 sm:gap-4 sm:p-5">
         <div className="grid min-w-0 gap-2">
-          <Link href={`/products/${product.id}`} className="line-clamp-2 min-h-[3.25rem] font-heading text-lg font-semibold leading-tight tracking-tight text-[#24102f] transition hover:text-[#4b1f61]">
+          <Link
+            href={`/products/${product.id}`}
+            className="line-clamp-2 min-h-13 font-heading text-lg font-semibold leading-tight tracking-tight text-[#24102f] transition hover:text-[#4b1f61]">
             {product.title}
           </Link>
           <div className="flex min-w-0 items-center gap-2 text-xs text-[#65526d]">
@@ -151,7 +173,11 @@ export function ProductCard({
                 />
               ))}
             </span>
-            <span className="truncate">{reviewCount > 0 ? `${rating.toFixed(1)} (${reviewCount})` : "No reviews yet"}</span>
+            <span className="truncate">
+              {reviewCount > 0
+                ? `${rating.toFixed(1)} (${reviewCount})`
+                : "No reviews yet"}
+            </span>
           </div>
           <p className="line-clamp-2 min-h-10 text-sm leading-5 text-[#65526d]">
             {getProductSummary(product)}
@@ -164,10 +190,9 @@ export function ProductCard({
             {formatPrice(displayPrice, currency)}
           </span>
           <Button
-            className="min-w-[5.25rem] shrink-0 rounded-full bg-[#4b1f61] px-4 text-white hover:bg-[#371647] hover:text-white active:bg-[#2d1039] disabled:bg-[#6f5b78] disabled:text-white"
+            className="min-w-21 shrink-0 rounded-full bg-[#4b1f61] px-4 text-white hover:bg-[#371647] hover:text-white active:bg-[#2d1039] disabled:bg-[#6f5b78] disabled:text-white"
             onClick={addProduct}
-            disabled={!inStock}
-          >
+            disabled={!inStock}>
             <ShoppingBag /> Add
           </Button>
         </div>
@@ -185,12 +210,15 @@ function ProductMeta({ product }: { product: Product }) {
     <div className="grid gap-2 text-xs text-[#65526d]">
       <div className="flex items-center justify-between gap-3 rounded-full bg-[#f3eef8] px-3 py-2">
         <span>Hydration level</span>
-        <span className="font-semibold text-[#4b1f61]">{getHydrationLevel(product)}/5</span>
+        <span className="font-semibold text-[#4b1f61]">
+          {getHydrationLevel(product)}/5
+        </span>
       </div>
       <div className="grid gap-1.5">
         {hasComplimentaryShipping(product) && (
           <span className="inline-flex items-center gap-1.5">
-            <PackageCheck className="size-3.5 text-[#8b5a00]" /> Complimentary shipping available
+            <PackageCheck className="size-3.5 text-[#8b5a00]" /> Complimentary
+            shipping available
           </span>
         )}
         {isTransferReady(product) && (
