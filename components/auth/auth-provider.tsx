@@ -55,13 +55,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refresh();
+    const initialRefresh = window.setTimeout(() => {
+      void refresh();
+    }, 0);
 
     const interval = window.setInterval(() => {
       void refresh();
     }, 10 * 60 * 1000);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(initialRefresh);
+      window.clearInterval(interval);
+    };
   }, [refresh]);
 
   const value = useMemo(

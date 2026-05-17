@@ -30,14 +30,14 @@ export function UsersTable({ users }: { users: UserRow[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-100/50" />
+      <div className=" relative flex items-center gap-2">
+        <div className=" max-w-sm flex-1">
+          <Search className="absolute ml--2 left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-violet-100/50" />
           <Input
             placeholder="Search by email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border-white/10 bg-white/8 text-white placeholder:text-violet-100/45 focus-visible:ring-[#d6b25e]/40"
+            className="border-white/10 bg-white/8 text-white pl-8 placeholder:text-violet-100/45 focus-visible:ring-[#d6b25e]/40"
           />
         </div>
       </div>

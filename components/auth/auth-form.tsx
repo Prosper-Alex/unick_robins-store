@@ -11,6 +11,16 @@ import type { AuthMode } from "./auth-container";
 
 const authInputClassName =
   "h-12 rounded-full  bg-[rgba(246,216,127,0.2)] px-5 text-white caret-[#f6d87f]  placeholder:text-violet-100/55 border-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f6d87f]";
+
+const OTP_PENDING_STORAGE_KEY = "unick-auth-otp-pending";
+const OTP_PENDING_MAX_AGE_MS = 30 * 60 * 1000;
+
+type StoredOtpPendingState = {
+  mode: Extract<AuthMode, "register" | "forgot_password">;
+  email: string;
+  createdAt: number;
+};
+
 export function AuthForm({
   mode,
   setMode,
@@ -21,13 +31,31 @@ export function AuthForm({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refresh: refreshAuth } = useAuth();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => readPendingOtpState()?.email ?? "");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
-  const [pendingResetEmail, setPendingResetEmail] = useState<string | null>(null);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(
+    () => {
+      const pendingState = readPendingOtpState();
+      return pendingState?.mode === "register" ? pendingState.email : null;
+    },
+  );
+  const [pendingResetEmail, setPendingResetEmail] = useState<string | null>(() => {
+    const pendingState = readPendingOtpState();
+    return pendingState?.mode === "forgot_password" ? pendingState.email : null;
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(() => {
+    const pendingState = readPendingOtpState();
+
+    if (!pendingState) {
+      return null;
+    }
+
+    return pendingState.mode === "forgot_password"
+      ? `Enter the password reset code sent to ${pendingState.email}.`
+      : `Enter the verification code sent to ${pendingState.email}.`;
+  });
   const [loading, setLoading] = useState(false);
   const isOtpStep = mode === "register" && pendingVerificationEmail !== null;
   const isResetOtpStep = mode === "forgot_password" && pendingResetEmail !== null;
@@ -55,6 +83,7 @@ export function AuthForm({
             return;
           }
 
+          clearPendingOtpState();
           await refreshAuth();
           router.replace("/account/update-password");
           return;
@@ -74,6 +103,11 @@ export function AuthForm({
           setMessage(result.error ?? "Failed to request password reset.");
         } else {
           setPendingResetEmail(normalizedEmail);
+          writePendingOtpState({
+            mode: "forgot_password",
+            email: normalizedEmail,
+            createdAt: Date.now(),
+          });
           setOtp("");
           setMessage(result.message ?? "Check your email for the password reset code.");
         }
@@ -97,6 +131,7 @@ export function AuthForm({
             return;
           }
 
+          clearPendingOtpState();
           if (result.role === "admin") {
             await refreshAuth();
             router.replace("/admin");
@@ -135,6 +170,11 @@ export function AuthForm({
 
       if (result.requiresEmailOtpVerification) {
         setPendingVerificationEmail(normalizedEmail);
+        writePendingOtpState({
+          mode: "register",
+          email: normalizedEmail,
+          createdAt: Date.now(),
+        });
         setMessage(
           result.message ??
             "Account created. Check your email for the one-time code before signing in.",
@@ -144,9 +184,11 @@ export function AuthForm({
       }
 
       if (result.role === "admin") {
+        clearPendingOtpState();
         await refreshAuth();
         router.replace(getSafeNextPath(searchParams.get("next")) ?? "/admin");
       } else {
+        clearPendingOtpState();
         await refreshAuth();
         router.replace(getSafeNextPath(searchParams.get("next")) ?? "/products");
       }
@@ -275,6 +317,59 @@ export function AuthForm({
       </Button>
     </form>
   );
+}
+
+function readPendingOtpState(): StoredOtpPendingState | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const rawValue = window.sessionStorage.getItem(OTP_PENDING_STORAGE_KEY);
+
+    if (!rawValue) {
+      return null;
+    }
+
+    const parsed = JSON.parse(rawValue) as Partial<StoredOtpPendingState>;
+    const mode =
+      parsed.mode === "register" || parsed.mode === "forgot_password"
+        ? parsed.mode
+        : null;
+    const email = typeof parsed.email === "string" ? parsed.email.trim().toLowerCase() : "";
+    const createdAt = typeof parsed.createdAt === "number" ? parsed.createdAt : 0;
+    const isFresh = Date.now() - createdAt <= OTP_PENDING_MAX_AGE_MS;
+
+    if (!mode || !email || !isFresh) {
+      clearPendingOtpState();
+      return null;
+    }
+
+    return {
+      mode,
+      email,
+      createdAt,
+    };
+  } catch {
+    clearPendingOtpState();
+    return null;
+  }
+}
+
+function writePendingOtpState(state: StoredOtpPendingState) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(OTP_PENDING_STORAGE_KEY, JSON.stringify(state));
+}
+
+function clearPendingOtpState() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.removeItem(OTP_PENDING_STORAGE_KEY);
 }
 
 function getSafeNextPath(next: string | null) {

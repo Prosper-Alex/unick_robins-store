@@ -124,7 +124,11 @@ export function ProductCard({
               <div className="grid content-start gap-4">
                 <p className="text-sm leading-6 text-[#65526d]">{getProductSummary(product)}</p>
                 <ProductMeta product={product} />
-                <Button className="w-fit rounded-full" onClick={addProduct} disabled={!inStock}>
+                <Button
+                  className="w-fit rounded-full bg-[#4b1f61] text-white hover:bg-[#371647] hover:text-white active:bg-[#2d1039] disabled:bg-[#6f5b78] disabled:text-white"
+                  onClick={addProduct}
+                  disabled={!inStock}
+                >
                   <ShoppingBag /> Add to cart
                 </Button>
               </div>
@@ -159,7 +163,11 @@ export function ProductCard({
           <span className="font-heading min-w-0 text-xl font-semibold text-[#24102f]">
             {formatPrice(displayPrice, currency)}
           </span>
-          <Button className="shrink-0 rounded-full px-4" onClick={addProduct} disabled={!inStock}>
+          <Button
+            className="min-w-[5.25rem] shrink-0 rounded-full bg-[#4b1f61] px-4 text-white hover:bg-[#371647] hover:text-white active:bg-[#2d1039] disabled:bg-[#6f5b78] disabled:text-white"
+            onClick={addProduct}
+            disabled={!inStock}
+          >
             <ShoppingBag /> Add
           </Button>
         </div>

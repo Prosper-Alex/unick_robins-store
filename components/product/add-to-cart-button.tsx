@@ -40,7 +40,7 @@ export function AddToCartButton({
   return (
     <div className="grid gap-3 sm:inline-grid">
       <Button
-        className="h-12 rounded-full px-8"
+        className="h-12 min-w-[10.75rem] rounded-full bg-[#4b1f61] px-8 text-white hover:bg-[#371647] hover:text-white active:bg-[#2d1039] disabled:bg-[#6f5b78] disabled:text-white"
         onClick={addSelection}
         disabled={!inStock}
       >

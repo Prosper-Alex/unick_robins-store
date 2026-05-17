@@ -3,7 +3,8 @@
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, Boxes, LayoutDashboard, LogOut, ReceiptText, Users } from "lucide-react";
+import { useLinkStatus } from "next/link";
+import { BarChart3, Boxes, LayoutDashboard, Loader2, LogOut, ReceiptText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileNavToggle } from "@/components/shared/mobile-nav-toggle";
 
@@ -59,12 +60,14 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                   active ? "bg-[#d6b25e] text-[#24102f] shadow-lg shadow-black/20" : "text-violet-100/70 hover:bg-white/[0.08] hover:text-white"
                 }`}
               >
                 <Icon className="size-4" />
-                {item.label}
+                <span className="min-w-0 flex-1">{item.label}</span>
+                <AdminLinkPendingIndicator />
               </Link>
             );
           })}
@@ -103,5 +106,20 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto w-full max-w-[1240px] px-4 py-6 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>
+  );
+}
+
+function AdminLinkPendingIndicator() {
+  const { pending } = useLinkStatus();
+
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex size-4 shrink-0 items-center justify-center transition-opacity ${
+        pending ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <Loader2 className="size-3.5 animate-spin" />
+    </span>
   );
 }

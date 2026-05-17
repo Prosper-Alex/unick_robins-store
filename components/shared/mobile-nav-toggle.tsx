@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import {
   Sheet,
   SheetClose,
@@ -101,6 +103,7 @@ export function MobileNavToggle({
                     </span>
                   )}
                   <span className="flex-1">{link.label}</span>
+                  <MobileLinkPendingIndicator />
                   {active && (
                     <span className="rounded-full bg-[#24102f]/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em]">
                       Current
@@ -114,6 +117,21 @@ export function MobileNavToggle({
         {footer && <SheetFooter>{footer}</SheetFooter>}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function MobileLinkPendingIndicator() {
+  const { pending } = useLinkStatus();
+
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex size-4 shrink-0 items-center justify-center transition-opacity ${
+        pending ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <Loader2 className="size-3.5 animate-spin" />
+    </span>
   );
 }
 

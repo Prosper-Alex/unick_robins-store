@@ -6,8 +6,11 @@ import { AuthForm } from "@/components/auth/auth-form";
 
 export type AuthMode = "login" | "register" | "forgot_password";
 
+const OTP_PENDING_STORAGE_KEY = "unick-auth-otp-pending";
+const OTP_PENDING_MAX_AGE_MS = 30 * 60 * 1000;
+
 export function AuthContainer() {
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<AuthMode>(getInitialAuthMode);
 
   return (
     <div className="rounded-[2rem] border border-white/10 bg-white/10 p-6 shadow-2xl shadow-black/20">
@@ -41,4 +44,28 @@ export function AuthContainer() {
       <AuthForm mode={mode} setMode={setMode} />
     </div>
   );
+}
+
+function getInitialAuthMode(): AuthMode {
+  if (typeof window === "undefined") {
+    return "login";
+  }
+
+  try {
+    const rawValue = window.sessionStorage.getItem(OTP_PENDING_STORAGE_KEY);
+
+    if (!rawValue) {
+      return "login";
+    }
+
+    const parsed = JSON.parse(rawValue) as { mode?: string; createdAt?: number };
+    const createdAt = typeof parsed.createdAt === "number" ? parsed.createdAt : 0;
+
+    return Date.now() - createdAt <= OTP_PENDING_MAX_AGE_MS &&
+      (parsed.mode === "register" || parsed.mode === "forgot_password")
+      ? parsed.mode
+      : "login";
+  } catch {
+    return "login";
+  }
 }

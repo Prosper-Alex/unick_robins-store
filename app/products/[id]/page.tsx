@@ -26,13 +26,11 @@ import {
   getProductPrice,
 } from "@/src/utils/pricing";
 import {
-  getBenefits,
   getHairCompatibility,
   getHydrationLevel,
-  getIngredients,
+  getProductDetailSections,
   getProductGallery,
   getProductSummary,
-  getUsageInstructions,
   hasComplimentaryShipping,
   isTransferReady,
 } from "@/src/utils/product-details";
@@ -135,7 +133,7 @@ export default async function ProductDetailsPage({
               <Button
                 asChild
                 variant="outline"
-                className="h-12 rounded-full px-8">
+                className="h-12 min-w-[9.25rem] rounded-full border-white/25 bg-white/10 px-8 text-[#fff8df] hover:bg-[#fff8df] hover:text-[#24102f] active:bg-[#f6e7b7] disabled:bg-white/10 disabled:text-[#fff8df]">
                 <Link href="/cart">View cart</Link>
               </Button>
             </div>
@@ -153,12 +151,13 @@ export default async function ProductDetailsPage({
         </section>
 
         <section className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-3 lg:px-8">
-          <ProductInfo title="Benefits" items={getBenefits(product)} />
-          <ProductInfo
-            title="How to use"
-            items={getUsageInstructions(product)}
-          />
-          <ProductInfo title="Ingredients" items={getIngredients(product)} />
+          {getProductDetailSections(product).map((section) => (
+            <ProductInfo
+              key={section.title}
+              title={section.title}
+              items={section.items}
+            />
+          ))}
         </section>
 
         <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

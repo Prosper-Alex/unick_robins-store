@@ -1,5 +1,24 @@
 import type { Product } from "@/src/types/product";
 
+type ProductDetailSection = {
+  title: string;
+  items: string[];
+};
+
+const apparelCategoryMatchers = [
+  "apparel",
+  "accessory",
+  "accessories",
+  "cap",
+  "caps",
+  "durag",
+  "durags",
+  "hair net",
+  "hair bands",
+  "hoodie",
+  "hoodies",
+];
+
 export function getProductSummary(product: Product) {
   return product.short_description?.trim() || getDynamicProductDescription(product);
 }
@@ -115,12 +134,22 @@ export function hasComplimentaryShipping(product: Product) {
 }
 
 export function getIngredients(product: Product) {
+  if (isApparelOrAccessory(product.category)) {
+    return getMaterialIngredients(product);
+  }
+
   return product.ingredients?.length
     ? product.ingredients
     : ["Botanical oils", "Amino shine complex", "Soft-touch conditioning esters"];
 }
 
 export function getBenefits(product: Product) {
+  if (isApparelOrAccessory(product.category)) {
+    return product.benefits?.length
+      ? product.benefits
+      : ["Protects styled hair", "Supports heat retention", "Finishes everyday looks with polish"];
+  }
+
   return product.benefits?.length
     ? product.benefits
     : ["Builds visible polish", "Softens without weight", "Supports a refined daily ritual"];
@@ -136,6 +165,48 @@ export function getHairCompatibility(product: Product) {
   return product.hair_compatibility?.length
     ? product.hair_compatibility
     : ["Curls", "Coils", "Waves", "Silk press", "Protective styles"];
+}
+
+export function getProductDetailSections(product: Product): ProductDetailSection[] {
+  if (isApparelOrAccessory(product.category)) {
+    return [
+      {
+        title: "Benefits",
+        items: getBenefits(product),
+      },
+      {
+        title: "Material/Ingredients",
+        items: getMaterialIngredients(product),
+      },
+    ].filter((section) => section.items.length > 0);
+  }
+
+  return [
+    {
+      title: "Benefits",
+      items: getBenefits(product),
+    },
+    {
+      title: "How to use",
+      items: getUsageInstructions(product),
+    },
+    {
+      title: "Ingredients",
+      items: getIngredients(product),
+    },
+  ];
+}
+
+export function isApparelOrAccessory(category: string) {
+  const normalizedCategory = category.trim().toLowerCase();
+
+  return apparelCategoryMatchers.some((matcher) => normalizedCategory.includes(matcher));
+}
+
+function getMaterialIngredients(product: Product) {
+  return product.ingredients?.length
+    ? product.ingredients
+    : ["Soft-touch fabric or fiber", "Comfortable everyday structure", "Gentle finish for styled hair"];
 }
 
 function hashString(value: string) {
