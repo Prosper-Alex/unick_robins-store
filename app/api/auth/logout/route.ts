@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { authCookieNames } from "@/src/lib/supabase-server";
+import { clearAuthCookies } from "@/src/lib/auth-session";
+import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
 
 export async function POST(request: Request) {
-  await clearAuthCookies();
+  await signOutAndClear();
 
   if (expectsDocument(request)) {
     return NextResponse.redirect(new URL("/account/logout", request.url), 303);
@@ -13,14 +14,20 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  await clearAuthCookies();
+  await signOutAndClear();
   return NextResponse.redirect(new URL("/account/logout", request.url));
 }
 
-async function clearAuthCookies() {
+async function signOutAndClear() {
   const cookieStore = await cookies();
-  cookieStore.delete(authCookieNames.access);
-  cookieStore.delete(authCookieNames.refresh);
+  const accessToken = cookieStore.get(authCookieNames.access)?.value;
+  const supabase = accessToken ? getAuthenticatedSupabaseServerClient(accessToken) : null;
+
+  if (supabase && accessToken) {
+    await supabase.auth.signOut({ scope: "local" });
+  }
+
+  clearAuthCookies(cookieStore);
 }
 
 function expectsDocument(request: Request) {

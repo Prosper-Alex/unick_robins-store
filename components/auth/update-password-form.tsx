@@ -42,7 +42,7 @@ export function UpdatePasswordForm() {
 
     if (!access_token || type !== "recovery") {
       queueMicrotask(() => {
-        setMessage("Invalid password reset link. Request a new link or sign in to change your password.");
+        setMessage("Invalid password reset link. Request a new code or sign in to change your password.");
         setReady(true);
       });
       return;
@@ -103,7 +103,7 @@ export function UpdatePasswordForm() {
       {source === "recovery" && (
         <div className="flex items-start gap-3 rounded-2xl border border-[#f6e7b7]/25 bg-[#f6e7b7]/10 px-4 py-3 text-sm text-violet-50">
           <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[#f6e7b7]" />
-          <p>Your reset link is verified. Save a new password to continue signed in.</p>
+          <p>Your reset request is verified. Save a new password to continue signed in.</p>
         </div>
       )}
       <div className="grid gap-2">
@@ -153,7 +153,7 @@ export function UpdatePasswordForm() {
               Update your password
             </DialogTitle>
             <DialogDescription className="text-violet-100">
-              Your recovery link checked out. Set a new password and you will be signed in automatically.
+              Your recovery request checked out. Set a new password and you will be signed in automatically.
             </DialogDescription>
           </DialogHeader>
           {form}

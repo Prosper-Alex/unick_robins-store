@@ -7,7 +7,7 @@ import { getSupabaseServerClient } from "@/src/lib/supabase-server";
 
 const schema = z.object({
   email: z.email().transform((value) => value.trim().toLowerCase()),
-  token: z.string().trim().min(6, "Enter the verification code."),
+  token: z.string().trim().min(6, "Enter the password reset code."),
 });
 
 export async function POST(request: Request) {
@@ -16,13 +16,13 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Enter a valid verification code." }, { status: 400 });
+    return NextResponse.json({ error: "Enter a valid password reset code." }, { status: 400 });
   }
 
   const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Enter a valid verification code." }, { status: 400 });
+    return NextResponse.json({ error: "Enter a valid password reset code." }, { status: 400 });
   }
 
   const supabase = getSupabaseServerClient();
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase.auth.verifyOtp({
     email: parsed.data.email,
     token: parsed.data.token,
-    type: "signup",
+    type: "recovery",
   });
 
   if (error || !data.session || !data.user) {

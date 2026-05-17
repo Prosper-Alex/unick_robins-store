@@ -2,7 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { ensureUserProfile } from "@/src/lib/auth-profile";
-import { authCookieNames, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import { setAuthCookies } from "@/src/lib/auth-session";
+import { getSupabaseServerClient } from "@/src/lib/supabase-server";
 
 const schema = z.object({
   email: z.email().transform((value) => value.trim().toLowerCase()),
@@ -61,20 +62,7 @@ export async function POST(request: Request) {
   const { role } = await ensureUserProfile(data.user, data.session.access_token);
 
   const cookieStore = await cookies();
-  cookieStore.set(authCookieNames.access, data.session.access_token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: data.session.expires_in,
-  });
-  cookieStore.set(authCookieNames.refresh, data.session.refresh_token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  setAuthCookies(cookieStore, data.session);
 
   return NextResponse.json({ user: data.user, role });
 }

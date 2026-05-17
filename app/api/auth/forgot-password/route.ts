@@ -14,7 +14,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Too many password reset attempts. Try again later." }, { status: 429 });
   }
 
-  const parsed = schema.safeParse(await request.json());
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+  }
+
+  const parsed = schema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
@@ -26,17 +34,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
   }
 
-  // Determine the origin dynamically for the reset link
-  const origin = new URL(request.url).origin;
-  const redirectTo = `${origin}/account/update-password`;
-
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ message: "Check your email for a password reset link." });
+  return NextResponse.json({
+    message: "Check your email for the one-time password reset code.",
+  });
 }

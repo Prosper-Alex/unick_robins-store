@@ -1,7 +1,12 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { authCookieNames, getAuthenticatedSupabaseServerClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
+import {
+  authCookieNames,
+  getAuthenticatedSupabaseServerClient,
+  getSupabaseAdminClient,
+  getSupabaseServerClient,
+} from "@/src/lib/supabase-server";
 
 const schema = z.object({
   password: z
@@ -60,7 +65,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Supabase is not configured." }, { status: 500 });
   }
 
-  const { data, error: updateError } = await authenticatedSupabase.auth.updateUser({
+  const {
+    data: { user },
+    error: userError,
+  } = await authenticatedSupabase.auth.getUser(sessionAccessToken);
+
+  if (userError || !user) {
+    return NextResponse.json({ error: "Your session has expired. Please verify your reset code again." }, { status: 401 });
+  }
+
+  const adminSupabase = getSupabaseAdminClient();
+
+  if (!adminSupabase) {
+    return NextResponse.json({ error: "Supabase admin access is not configured." }, { status: 500 });
+  }
+
+  const { data, error: updateError } = await adminSupabase.auth.admin.updateUserById(user.id, {
     password,
   });
 

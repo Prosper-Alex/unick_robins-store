@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { PaymentCartReconciler } from "@/components/checkout/payment-cart-reconciler";
 import "./globals.css";
 
@@ -46,8 +47,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col">
-        <PaymentCartReconciler />
-        {children}
+        <AuthProvider>
+          <PaymentCartReconciler />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,10 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
+import {
+  authCookieNames,
+  getAuthenticatedSupabaseServerClient,
+  getSupabaseAdminClient,
+} from "@/src/lib/supabase-server";
 import { UsersTable, type UserRow } from "@/components/admin/users-table";
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +26,10 @@ export default async function AdminUsersPage() {
     redirect("/account/login");
   }
 
-  const { data: users, error } = await supabase
+  const adminSupabase = getSupabaseAdminClient();
+  const directorySupabase = adminSupabase ?? supabase;
+
+  const { data: users, error } = await directorySupabase
     .from("users")
     .select(`
       id,

@@ -3,16 +3,16 @@ import { createClient } from "@supabase/supabase-js";
 
 const accessCookie = "ur-access-token";
 const refreshCookie = "ur-refresh-token";
+const protectedRoutes = ["/account/dashboard", "/account/orders", "/account/update-password", "/admin", "/checkout", "/wishlist"];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  if (!pathname.startsWith("/admin")) {
-    return NextResponse.next();
-  }
+  const isProtectedRoute = protectedRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const isAuthRoute = pathname === "/account/login";
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !anonKey) {
     return NextResponse.next();
@@ -57,21 +57,8 @@ export async function proxy(request: NextRequest) {
       });
       
       // Update cookies
-      response.cookies.set(accessCookie, data.session.access_token, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: data.session.expires_in,
-      });
-      
-      response.cookies.set(refreshCookie, data.session.refresh_token, {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-      });
+      response.cookies.set(accessCookie, data.session.access_token, getCookieOptions(data.session.expires_in));
+      response.cookies.set(refreshCookie, data.session.refresh_token, getCookieOptions(60 * 60 * 24 * 30));
     } else {
       // Refresh failed, clear session
       response.cookies.delete(accessCookie);
@@ -79,8 +66,11 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Admin route protection
-  if (pathname.startsWith("/admin")) {
+  if (isAuthRoute && isValidSession) {
+    return redirectWithPendingCookies(new URL("/account/dashboard", request.url), response);
+  }
+
+  if (isProtectedRoute) {
     if (!isValidSession || !currentAccessToken) {
       return redirectToLogin(request, response);
     }
@@ -93,10 +83,11 @@ export async function proxy(request: NextRequest) {
       return redirectToLogin(request, response);
     }
 
+    const roleKey = serviceRoleKey ?? anonKey;
     const roleResponse = await fetch(`${url}/rest/v1/users?id=eq.${user.id}&select=role`, {
       headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${currentAccessToken}`,
+        apikey: roleKey,
+        Authorization: `Bearer ${serviceRoleKey ? roleKey : currentAccessToken}`,
       },
     });
 
@@ -106,8 +97,8 @@ export async function proxy(request: NextRequest) {
 
     const roles = await roleResponse.json() as Array<{ role?: string }>;
 
-    if (roles[0]?.role !== "admin") {
-      return NextResponse.redirect(new URL("/", request.url));
+    if (pathname.startsWith("/admin") && roles[0]?.role !== "admin") {
+      return redirectWithPendingCookies(new URL("/", request.url), response);
     }
   }
 
@@ -117,19 +108,38 @@ export async function proxy(request: NextRequest) {
 function redirectToLogin(request: NextRequest, response: NextResponse) {
   const url = new URL("/account/login", request.url);
   url.searchParams.set("next", request.nextUrl.pathname);
-  
-  // Clone the cookies from the original response if any were set
+  return redirectWithPendingCookies(url, response);
+}
+
+function redirectWithPendingCookies(url: URL, response: NextResponse) {
   const redirectResponse = NextResponse.redirect(url);
-  
-  // Apply any deleted/set cookies to the redirect
   const setCookies = response.headers.get("Set-Cookie");
+
   if (setCookies) {
     redirectResponse.headers.set("Set-Cookie", setCookies);
   }
-  
+
   return redirectResponse;
 }
 
+function getCookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge,
+  };
+}
+
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    "/account/login",
+    "/account/dashboard/:path*",
+    "/account/orders/:path*",
+    "/account/update-password",
+    "/admin/:path*",
+    "/checkout",
+    "/wishlist/:path*",
+  ],
 };

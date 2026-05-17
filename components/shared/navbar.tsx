@@ -12,6 +12,7 @@ import {
   Store,
   UserRound,
 } from "lucide-react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { MobileNavToggle } from "@/components/shared/mobile-nav-toggle";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ const accountLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { authenticated, loading, user } = useAuth();
   const count = useCartStore((state) =>
     state.items.reduce((total, item) => total + item.quantity, 0),
   );
@@ -122,9 +124,15 @@ export function Navbar() {
               isActivePath(pathname, "/account/dashboard", searchParams) &&
                 "bg-[#f6e7b7] text-[#24102f] hover:bg-[#f6e7b7] hover:text-[#24102f]",
             )}
-            aria-label="Account dashboard">
-            <Link href="/account/dashboard">
-              <UserRound />
+            aria-label={authenticated ? "Account dashboard" : "Sign in"}>
+            <Link href={authenticated ? "/account/dashboard" : "/account/login"}>
+              {authenticated && user?.email ? (
+                <span className="flex size-6 items-center justify-center rounded-full bg-[#f6e7b7] text-xs font-semibold uppercase text-[#24102f]">
+                  {user.email.charAt(0)}
+                </span>
+              ) : (
+                <UserRound className={loading ? "animate-pulse" : undefined} />
+              )}
             </Link>
           </Button>
           <Button
@@ -167,7 +175,7 @@ export function Navbar() {
           />
         </div>
       </div>
-      <MobileBottomNav count={count} pathname={pathname} />
+      <MobileBottomNav count={count} pathname={pathname} authenticated={authenticated} />
     </header>
   );
 }
@@ -175,15 +183,17 @@ export function Navbar() {
 function MobileBottomNav({
   count,
   pathname,
+  authenticated,
 }: {
   count: number;
   pathname: string;
+  authenticated: boolean;
 }) {
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/products", label: "Shop", icon: Store },
     { href: "/cart", label: "Cart", icon: ShoppingBasket, badge: count },
-    { href: "/account/dashboard", label: "Account", icon: UserRound },
+    { href: authenticated ? "/account/dashboard" : "/account/login", label: authenticated ? "Account" : "Sign in", icon: UserRound },
   ];
 
   return (

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Loader2, LockKeyhole, UserPlus } from "lucide-react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -18,14 +19,18 @@ export function AuthForm({
   setMode: (m: AuthMode) => void;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { refresh: refreshAuth } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [pendingResetEmail, setPendingResetEmail] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const isOtpStep = mode === "register" && pendingVerificationEmail !== null;
+  const isResetOtpStep = mode === "forgot_password" && pendingResetEmail !== null;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,6 +40,26 @@ export function AuthForm({
 
     try {
       if (mode === "forgot_password") {
+        if (isResetOtpStep) {
+          const response = await fetch("/api/auth/verify-reset-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: pendingResetEmail, token: otp }),
+          });
+          const result = (await response.json()) as {
+            error?: string;
+          };
+
+          if (!response.ok) {
+            setMessage(result.error ?? "Verification failed.");
+            return;
+          }
+
+          await refreshAuth();
+          router.replace("/account/update-password");
+          return;
+        }
+
         const response = await fetch(`/api/auth/forgot-password`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -48,7 +73,9 @@ export function AuthForm({
         if (!response.ok) {
           setMessage(result.error ?? "Failed to request password reset.");
         } else {
-          setMessage(result.message ?? "Check your email for a reset link!");
+          setPendingResetEmail(normalizedEmail);
+          setOtp("");
+          setMessage(result.message ?? "Check your email for the password reset code.");
         }
         return;
       }
@@ -71,9 +98,11 @@ export function AuthForm({
           }
 
           if (result.role === "admin") {
+            await refreshAuth();
             router.replace("/admin");
           } else {
-            router.replace("/products");
+            await refreshAuth();
+            router.replace(getSafeNextPath(searchParams.get("next")) ?? "/products");
           }
 
           return;
@@ -115,9 +144,11 @@ export function AuthForm({
       }
 
       if (result.role === "admin") {
-        router.replace("/admin");
+        await refreshAuth();
+        router.replace(getSafeNextPath(searchParams.get("next")) ?? "/admin");
       } else {
-        router.replace("/products");
+        await refreshAuth();
+        router.replace(getSafeNextPath(searchParams.get("next")) ?? "/products");
       }
     } catch {
       setMessage("Network error. Check your connection and try again.");
@@ -139,12 +170,12 @@ export function AuthForm({
           autoComplete="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          disabled={isOtpStep}
+          disabled={isOtpStep || isResetOtpStep}
           className={authInputClassName}
         />
       </div>
 
-      {mode !== "forgot_password" && !isOtpStep && (
+      {mode !== "forgot_password" && !isOtpStep && !isResetOtpStep && (
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <label htmlFor="password" className="text-sm font-medium">
@@ -198,6 +229,26 @@ export function AuthForm({
         </div>
       )}
 
+      {isResetOtpStep && (
+        <div className="grid gap-2">
+          <label htmlFor="resetOtp" className="text-sm font-medium">
+            Verify reset code
+          </label>
+          <Input
+            id="resetOtp"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+            value={otp}
+            onChange={(event) => setOtp(event.target.value)}
+            className={authInputClassName}
+          />
+          <p className="text-xs leading-5 text-violet-100">
+            Enter the password reset code sent to {pendingResetEmail}.
+          </p>
+        </div>
+      )}
+
       {message && (
         <p className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-violet-50">
           {message}
@@ -213,7 +264,9 @@ export function AuthForm({
           <UserPlus />
         )}
         {mode === "forgot_password"
-          ? "Send reset link"
+          ? isResetOtpStep
+            ? "Verify reset code"
+            : "Send reset code"
           : mode === "login"
             ? "Sign in"
             : isOtpStep
@@ -222,6 +275,14 @@ export function AuthForm({
       </Button>
     </form>
   );
+}
+
+function getSafeNextPath(next: string | null) {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) {
+    return null;
+  }
+
+  return next;
 }
 
 function PasswordInput({

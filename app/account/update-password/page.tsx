@@ -20,7 +20,7 @@ export default function UpdatePasswordPage() {
               Keep your account access current.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-violet-100 sm:text-lg sm:leading-8">
-              Recovery links open a verified update dialog. Signed-in customers can use the same page to change their password from account settings.
+              Verified reset codes sign you back in before you choose a new password. Signed-in customers can use the same page from account settings.
             </p>
           </div>
 
