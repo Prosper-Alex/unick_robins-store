@@ -16,6 +16,9 @@ const allowedStatuses = new Set([
   "payment_failed",
 ]);
 
+const startedFulfillmentStatuses = new Set(["processing", "shipped", "delivered"]);
+const closedWithoutFulfillmentStatuses = new Set(["cancelled", "refunded", "payment_failed"]);
+
 async function verifyAdmin() {
   const cookieStore = await cookies();
   const token = cookieStore.get(authCookieNames.access)?.value;
@@ -85,6 +88,23 @@ export async function updateOrderStatusAction(input: {
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (startedFulfillmentStatuses.has(status) || closedWithoutFulfillmentStatuses.has(status)) {
+    const eventStatus = startedFulfillmentStatuses.has(status) ? "done" : "dismissed";
+    const { error: eventError } = await supabase
+      .from("order_events")
+      .update({
+        status: eventStatus,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("order_id", input.id)
+      .eq("type", "admin_new_order")
+      .eq("status", "pending");
+
+    if (eventError) {
+      throw new Error(eventError.message);
+    }
   }
 
   await logAudit(supabase, user.id, "update_status", input.id, {
