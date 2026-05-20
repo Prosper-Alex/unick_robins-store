@@ -135,6 +135,18 @@ create table if not exists public.newsletter_subscribers (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.order_events (
+  id uuid primary key default gen_random_uuid(),
+  order_id uuid not null references public.orders(id) on delete cascade,
+  type text not null check (type in ('customer_receipt_pending', 'admin_new_order')),
+  audience text not null check (audience in ('customer', 'admin')),
+  status text not null default 'pending' check (status in ('pending', 'done', 'dismissed')),
+  payload jsonb not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (order_id, type)
+);
+
 alter table public.users enable row level security;
 alter table public.products enable row level security;
 alter table public.categories enable row level security;
@@ -142,6 +154,7 @@ alter table public.orders enable row level security;
 alter table public.reviews enable row level security;
 alter table public.wishlist enable row level security;
 alter table public.newsletter_subscribers enable row level security;
+alter table public.order_events enable row level security;
 
 drop policy if exists "Products are public" on public.products;
 drop policy if exists "Categories are public" on public.categories;
@@ -272,6 +285,28 @@ create policy "Admins can update orders" on public.orders for update
 using (public.is_admin())
 with check (public.is_admin());
 
+drop policy if exists "Admins can read order events" on public.order_events;
+drop policy if exists "Admins can update order events" on public.order_events;
+drop policy if exists "Customers can read own order events" on public.order_events;
+
+create policy "Admins can read order events" on public.order_events for select
+using (public.is_admin());
+
+create policy "Admins can update order events" on public.order_events for update
+using (public.is_admin())
+with check (public.is_admin());
+
+create policy "Customers can read own order events" on public.order_events for select
+using (
+  audience = 'customer'
+  and exists (
+    select 1
+    from public.orders
+    where orders.id = order_events.order_id
+      and orders.user_id = auth.uid()
+  )
+);
+
 create or replace function public.confirm_paid_order(target_reference text)
 returns uuid
 language plpgsql
@@ -319,6 +354,33 @@ begin
     payment_status = 'paid',
     paid_at = coalesce(paid_at, now())
   where id = target_order.id;
+
+  insert into public.order_events (order_id, type, audience, payload)
+  values
+    (
+      target_order.id,
+      'customer_receipt_pending',
+      'customer',
+      jsonb_build_object(
+        'email', target_order.customer_email,
+        'name', target_order.customer_name,
+        'total', target_order.total,
+        'currency', target_order.pricing_currency
+      )
+    ),
+    (
+      target_order.id,
+      'admin_new_order',
+      'admin',
+      jsonb_build_object(
+        'customer_name', target_order.customer_name,
+        'customer_email', target_order.customer_email,
+        'total', target_order.total,
+        'currency', target_order.pricing_currency,
+        'delivery_method', target_order.delivery_method
+      )
+    )
+  on conflict (order_id, type) do nothing;
 
   return target_order.id;
 end;

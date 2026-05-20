@@ -1,16 +1,20 @@
-import { Boxes, DollarSign, PackageCheck, ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { Bell, Boxes, DollarSign, PackageCheck, ShoppingCart } from "lucide-react";
 import { MetricCard } from "@/components/admin/metric-card";
 import { Card } from "@/components/ui/card";
-import { getAdminStoreData, getOrderTotal } from "@/src/lib/admin-data";
-import { formatCurrency } from "@/src/utils/format";
+import { Button } from "@/components/ui/button";
+import { getAdminStoreData, getOrderTotal, type AdminOrderEvent } from "@/src/lib/admin-data";
+import { formatCurrency, formatDate } from "@/src/utils/format";
 
 export default async function AdminOverviewPage() {
-  const { products, orders, orderError } = await getAdminStoreData();
+  const { products, orders, orderEvents, orderError, orderEventError } = await getAdminStoreData();
   const inventoryValue = products.reduce((total, product) => total + product.price * product.stock, 0);
   const lowStock = products.filter((product) => product.stock <= 20);
   const totalRevenue = orders.reduce((total, order) => total + getOrderTotal(order), 0);
   const inStockProducts = products.filter((product) => product.stock > 0).length;
   const recentOrders = orders.slice(0, 5);
+  const pendingAdminNotifications = orderEvents.filter((event) => event.type === "admin_new_order");
+  const orderLookup = new Map(orders.map((order) => [order.id, order]));
 
   return (
     <div className="grid gap-8">
@@ -27,6 +31,33 @@ export default async function AdminOverviewPage() {
         <MetricCard label="Orders" value={`${orders.length}`} detail={orderError ? "Orders unavailable" : "Real submitted orders"} icon={ShoppingCart} />
         <MetricCard label="In stock" value={`${inStockProducts}`} detail="Products ready to sell" icon={PackageCheck} />
       </div>
+      <Card className="border-white/10 bg-white/[0.08] p-6 text-white shadow-xl shadow-black/20 backdrop-blur">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Bell className="size-5 text-[#d6b25e]" />
+              <h2 className="text-xl font-semibold">Admin notifications</h2>
+            </div>
+            <p className="mt-1 text-sm text-violet-100/60">
+              New paid orders that need manual fulfillment.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-[#d6b25e]/15 px-3 py-1 text-sm font-medium text-[#f6e7b7]">
+            {pendingAdminNotifications.length} pending
+          </span>
+        </div>
+        <div className="mt-5 grid gap-3">
+          {orderEventError ? (
+            <EmptyAdminState title="Notifications are not available" detail={orderEventError} />
+          ) : pendingAdminNotifications.length > 0 ? (
+            pendingAdminNotifications.map((event) => (
+              <AdminNotification key={event.id} event={event} orderStatus={orderLookup.get(event.order_id)?.status} />
+            ))
+          ) : (
+            <EmptyAdminState title="No pending admin notifications" detail="Paid orders will appear here after Paystack confirms payment." />
+          )}
+        </div>
+      </Card>
       <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
         <Card className="border-white/10 bg-white/[0.08] p-6 text-white shadow-xl shadow-black/20 backdrop-blur">
           <div className="flex items-center justify-between gap-4">
@@ -70,6 +101,38 @@ export default async function AdminOverviewPage() {
           </div>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function AdminNotification({ event, orderStatus }: { event: AdminOrderEvent; orderStatus?: string | null }) {
+  const total = Number(event.payload.total ?? 0);
+  const currency = typeof event.payload.currency === "string" ? event.payload.currency : undefined;
+  const customerName = typeof event.payload.customer_name === "string" && event.payload.customer_name.length > 0
+    ? event.payload.customer_name
+    : "Customer";
+  const customerEmail = typeof event.payload.customer_email === "string" ? event.payload.customer_email : null;
+  const deliveryMethod = typeof event.payload.delivery_method === "string" ? event.payload.delivery_method : null;
+
+  return (
+    <div className="grid gap-4 rounded-xl border border-white/10 bg-[#1a0824]/65 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium">New paid order</p>
+          <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-xs font-medium text-emerald-200">
+            {orderStatus?.replaceAll("_", " ") ?? "paid"}
+          </span>
+        </div>
+        <p className="mt-1 text-sm text-violet-100/65">
+          {customerName}{customerEmail ? ` · ${customerEmail}` : ""} · {formatCurrency(total, currency)}
+        </p>
+        <p className="mt-1 text-xs text-violet-100/45">
+          {deliveryMethod ? `${deliveryMethod} delivery · ` : ""}{formatDate(event.created_at)}
+        </p>
+      </div>
+      <Button asChild className="rounded-full bg-[#d6b25e] text-[#24102f] hover:bg-[#f6e7b7]">
+        <Link href="/admin/orders">Fulfill order</Link>
+      </Button>
     </div>
   );
 }

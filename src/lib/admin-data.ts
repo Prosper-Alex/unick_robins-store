@@ -23,11 +23,24 @@ export type AdminOrder = {
   created_at: string;
 };
 
+export type AdminOrderEvent = {
+  id: string;
+  order_id: string;
+  type: "customer_receipt_pending" | "admin_new_order";
+  audience: "customer" | "admin";
+  status: "pending" | "done" | "dismissed";
+  payload: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AdminStoreData = {
   products: Product[];
   orders: AdminOrder[];
+  orderEvents: AdminOrderEvent[];
   productError: string | null;
   orderError: string | null;
+  orderEventError: string | null;
 };
 
 export async function getAdminStoreData(): Promise<AdminStoreData> {
@@ -39,25 +52,60 @@ export async function getAdminStoreData(): Promise<AdminStoreData> {
     return {
       products: [],
       orders: [],
+      orderEvents: [],
       productError: "Supabase is not configured.",
       orderError: "Supabase is not configured.",
+      orderEventError: "Supabase is not configured.",
     };
   }
 
-  const [productResult, orderResult] = await Promise.all([
+  const [productResult, orderResult, orderEventResult] = await Promise.all([
     supabase.from("products").select("*").order("created_at", { ascending: false }),
     supabase
       .from("orders")
       .select("id,user_id,status,payment_status,payment_reference,total,shipping_fee,pricing_currency,pricing_country,customer_name,customer_email,customer_phone,shipping_address,delivery_method,tracking_number,paid_at,items,created_at")
       .order("created_at", { ascending: false }),
+    supabase
+      .from("order_events")
+      .select("id,order_id,type,audience,status,payload,created_at,updated_at")
+      .eq("audience", "admin")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   return {
     products: productResult.data ?? [],
     orders: orderResult.data ?? [],
+    orderEvents: normalizeOrderEvents(orderEventResult.data),
     productError: productResult.error?.message ?? null,
     orderError: orderResult.error?.message ?? null,
+    orderEventError: orderEventResult.error?.message ?? null,
   };
+}
+
+function normalizeOrderEvents(events: unknown): AdminOrderEvent[] {
+  if (!Array.isArray(events)) {
+    return [];
+  }
+
+  return events.map((event) => {
+    const source = event as Record<string, unknown>;
+    return {
+      id: String(source.id ?? ""),
+      order_id: String(source.order_id ?? ""),
+      type: source.type === "customer_receipt_pending" ? "customer_receipt_pending" : "admin_new_order",
+      audience: source.audience === "customer" ? "customer" : "admin",
+      status: source.status === "done" || source.status === "dismissed" ? source.status : "pending",
+      payload: isPlainObject(source.payload) ? source.payload : {},
+      created_at: String(source.created_at ?? ""),
+      updated_at: String(source.updated_at ?? ""),
+    };
+  });
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 export function getOrderTotal(order: AdminOrder) {
