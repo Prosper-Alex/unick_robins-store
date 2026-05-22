@@ -209,6 +209,14 @@
     animation: gold-pulse 2.8s ease-in-out infinite;
   }
 
+  .text-brand-muted {
+    color: #65526d;
+  }
+
+  .hover-text-brand-muted:hover {
+    color: #65526d;
+  }
+
   /* Premium card hover lift */
   .card-lift {
     transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),

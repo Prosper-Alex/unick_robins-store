@@ -141,7 +141,7 @@ export function ProductCard({
                 />
               </div>
               <div className="grid content-start gap-4">
-                <p className="text-sm leading-6 text-[#65526d]">
+                <p className="text-sm leading-6 text-brand-muted">
                   {getProductSummary(product)}
                 </p>
                 <ProductMeta product={product} />
@@ -164,7 +164,7 @@ export function ProductCard({
             className="line-clamp-2 min-h-13 font-heading text-lg font-semibold leading-tight tracking-tight text-[#24102f] transition hover:text-[#4b1f61]">
             {product.title}
           </Link>
-          <div className="flex min-w-0 items-center gap-2 text-xs text-[#65526d]">
+          <div className="flex min-w-0 items-center gap-2 text-xs text-brand-muted">
             <span className="flex shrink-0 text-[#8b5a00]">
               {Array.from({ length: 5 }).map((_, index) => (
                 <Star
@@ -179,7 +179,7 @@ export function ProductCard({
                 : "No reviews yet"}
             </span>
           </div>
-          <p className="line-clamp-2 min-h-10 text-sm leading-5 text-[#65526d]">
+          <p className="line-clamp-2 min-h-10 text-sm leading-5 text-brand-muted">
             {getProductSummary(product)}
           </p>
         </div>
@@ -207,7 +207,7 @@ function formatPrice(price: number, currency: StoreCurrency) {
 
 function ProductMeta({ product }: { product: Product }) {
   return (
-    <div className="grid gap-2 text-xs text-[#65526d]">
+    <div className="grid gap-2 text-xs text-brand-muted">
       <div className="flex items-center justify-between gap-3 rounded-full bg-[#f3eef8] px-3 py-2">
         <span>Hydration level</span>
         <span className="font-semibold text-[#4b1f61]">

@@ -170,7 +170,7 @@ export default async function ProductDetailsPage({
                 <h2 className="mt-3 text-2xl font-normal leading-[1.1] tracking-tight sm:text-3xl">
                   Build the complete crown ritual.
                 </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-[#65526d]">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-brand-muted">
                   Pair compatible formulas for cleanse-day polish, daily
                   hydration, and a finished style that still feels touchable.
                 </p>

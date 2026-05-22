@@ -21,14 +21,25 @@ export function ProductCatalog({
 }) {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState(searchParams.get("category") ?? initialCategory);
+  const [category, setCategory] = useState(
+    searchParams.get("category") ?? initialCategory,
+  );
   const [page, setPage] = useState(1);
-  const categories = ["All", ...Array.from(new Set(products.map((product) => product.category)))];
+  const categories = [
+    "All",
+    ...Array.from(new Set(products.map((product) => product.category))),
+  ];
 
   const filtered = useMemo(() => {
     return products.filter((product) => {
-      const matchesCategory = category === "All" || product.category === category;
-      const matchesQuery = [product.title, product.description, product.short_description, product.category]
+      const matchesCategory =
+        category === "All" || product.category === category;
+      const matchesQuery = [
+        product.title,
+        product.description,
+        product.short_description,
+        product.category,
+      ]
         .join(" ")
         .toLowerCase()
         .includes(query.toLowerCase());
@@ -37,7 +48,10 @@ export function ProductCatalog({
     });
   }, [category, products, query]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const visibleProducts = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const visibleProducts = filtered.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
 
   function updateQuery(value: string) {
     setQuery(value);
@@ -51,9 +65,9 @@ export function ProductCatalog({
 
   return (
     <div className="grid min-w-0 gap-8 overflow-hidden sm:gap-10">
-      <div className="grid min-w-0 gap-4 rounded-2xl border border-white/10 bg-white/[0.96] p-3 shadow-sm shadow-black/10 sm:p-4 lg:grid-cols-[minmax(260px,320px)_1fr] lg:items-center">
+      <div className="grid min-w-0 gap-4 rounded-2xl border border-white/10 bg-white/96 p-3 shadow-sm  text-brand-muted shadow-black/10 sm:p-4 lg:grid-cols-[minmax(260px,320px)_1fr] lg:items-center">
         <div className="relative min-w-0">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#65526d]" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
           <Input
             value={query}
             onChange={(event) => updateQuery(event.target.value)}
@@ -67,9 +81,8 @@ export function ProductCatalog({
               key={item}
               type="button"
               variant={category === item ? "default" : "outline"}
-              className="shrink-0 rounded-full"
-              onClick={() => updateCategory(item)}
-            >
+              className="shrink-0 rounded-full hover-text-brand-muted"
+              onClick={() => updateCategory(item)}>
               {item}
             </Button>
           ))}
@@ -80,28 +93,37 @@ export function ProductCatalog({
         <>
           <div className="flex flex-col gap-3 text-sm text-violet-100 sm:flex-row sm:items-center sm:justify-between">
             <p>
-              Showing {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} products
+              Showing {(page - 1) * PAGE_SIZE + 1}-
+              {Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}{" "}
+              products
             </p>
             {pageCount > 1 && (
-              <p className="text-violet-200">Page {page} of {pageCount}</p>
+              <p className="text-violet-200">
+                Page {page} of {pageCount}
+              </p>
             )}
           </div>
 
           <div className="grid w-full min-w-0 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:gap-x-8">
             {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} country={country} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                country={country}
+              />
             ))}
           </div>
 
           {pageCount > 1 && (
-            <nav className="flex flex-col items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/10 p-3 text-violet-50 sm:flex-row" aria-label="Product pagination">
+            <nav
+              className="flex flex-col items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/10 p-3 text-violet-50 sm:flex-row"
+              aria-label="Product pagination">
               <Button
                 type="button"
                 variant="ghost"
                 className="w-full rounded-full text-violet-50 hover:bg-white/10 sm:w-auto"
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={page === 1}
-              >
+                disabled={page === 1}>
                 <ChevronLeft /> Previous
               </Button>
               <div className="flex max-w-full gap-2 overflow-x-auto">
@@ -115,8 +137,7 @@ export function ProductCatalog({
                       size="icon"
                       className="rounded-full"
                       onClick={() => setPage(pageNumber)}
-                      aria-current={page === pageNumber ? "page" : undefined}
-                    >
+                      aria-current={page === pageNumber ? "page" : undefined}>
                       {pageNumber}
                     </Button>
                   );
@@ -126,18 +147,23 @@ export function ProductCatalog({
                 type="button"
                 variant="ghost"
                 className="w-full rounded-full text-violet-50 hover:bg-white/10 sm:w-auto"
-                onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
-                disabled={page === pageCount}
-              >
+                onClick={() =>
+                  setPage((current) => Math.min(pageCount, current + 1))
+                }
+                disabled={page === pageCount}>
                 Next <ChevronRight />
               </Button>
             </nav>
           )}
         </>
       ) : (
-        <div className="rounded-3xl border border-dashed border-violet-200 bg-white/[0.96] px-6 py-16 text-center">
-          <h2 className="text-xl font-semibold text-[#24102f]">No products found</h2>
-          <p className="mt-2 text-sm text-[#65526d]">Try another category or search term.</p>
+        <div className="rounded-3xl border border-dashed border-violet-200 bg-white/96 px-6 py-16 text-center">
+          <h2 className="text-xl font-semibold text-[#24102f]">
+            No products found
+          </h2>
+          <p className="mt-2 text-sm text-brand-muted">
+            Try another category or search term.
+          </p>
         </div>
       )}
     </div>

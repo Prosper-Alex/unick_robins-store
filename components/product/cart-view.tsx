@@ -72,7 +72,7 @@ export function CartView({ initialCountry }: { initialCountry?: string | null })
                 <h2 className="mt-1 line-clamp-2 text-base font-semibold leading-tight text-[#24102f] sm:text-lg">{item.title}</h2>
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
                   <span className="font-medium text-[#24102f]">{formatCurrency(getProductPrice(item, currency), currency)}</span>
-                  <span className="text-[#65526d]">Line total {formatCurrency(getProductPrice(item, currency) * item.quantity, currency)}</span>
+                  <span className="text-brand-muted">Line total {formatCurrency(getProductPrice(item, currency) * item.quantity, currency)}</span>
                 </div>
               </div>
               <div className="col-span-2 flex items-center justify-between gap-3 rounded-2xl border border-[#24102f]/8 bg-[#fbf8fb] p-2 sm:col-span-1 sm:min-w-[190px]">
@@ -119,11 +119,11 @@ export function CartView({ initialCountry }: { initialCountry?: string | null })
         </div>
         <div className="mt-6 grid gap-4 rounded-2xl bg-[#fbf8fb] p-4 text-sm ring-1 ring-[#24102f]/8">
           <div className="flex justify-between">
-            <span className="text-[#65526d]">Subtotal</span>
+            <span className="text-brand-muted">Subtotal</span>
             <OdometerValue value={subtotal} currency={currency} className="font-medium" />
           </div>
           <div className="flex justify-between">
-            <span className="text-[#65526d]">Shipping</span>
+            <span className="text-brand-muted">Shipping</span>
             <span className="font-medium">Calculated later</span>
           </div>
           <div className="flex justify-between border-t border-[#24102f]/10 pt-4 text-lg font-semibold">
@@ -134,7 +134,7 @@ export function CartView({ initialCountry }: { initialCountry?: string | null })
         <Button asChild className="mt-6 h-11 w-full rounded-full bg-[#4b1f61] text-white hover:bg-[#371647]" variant="secondary">
           <Link href="/checkout">Checkout</Link>
         </Button>
-        <Button variant="ghost" className="mt-2 h-10 w-full rounded-full text-[#65526d] hover:bg-[#f6e7b7]/60 hover:text-[#24102f]" onClick={clearCart}>
+        <Button variant="ghost" className="mt-2 h-10 w-full rounded-full text-brand-muted hover:bg-[#f6e7b7]/60 hover:text-[#24102f]" onClick={clearCart}>
           Clear cart
         </Button>
       </aside>
