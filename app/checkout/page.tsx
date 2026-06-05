@@ -1,13 +1,16 @@
 import { CheckoutForm } from "@/components/checkout/checkout-form";
 import { Footer } from "@/components/shared/footer";
 import { Navbar } from "@/components/shared/navbar";
+import { getActiveDeliveryRates } from "@/src/services/delivery-rates";
 
 export const metadata = {
   title: "Secure Checkout | Unick Robins",
   description: "Complete your Unick Robins order securely.",
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const deliveryRates = await getActiveDeliveryRates();
+
   return (
     <>
       <Navbar />
@@ -21,7 +24,7 @@ export default function CheckoutPage() {
               Secure payment
             </h1>
           </div>
-          <CheckoutForm />
+          <CheckoutForm deliveryRates={deliveryRates} />
         </div>
       </main>
       <Footer />

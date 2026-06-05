@@ -23,6 +23,7 @@ type MobileNavLink = {
   href: string;
   label: string;
   icon?: ReactNode;
+  exact?: boolean;
 };
 
 export function MobileNavToggle({
@@ -84,7 +85,7 @@ export function MobileNavToggle({
         </SheetHeader>
         <div className="grid gap-2 px-4 pt-2">
           {links.map((link, index) => {
-            const active = isActivePath(pathname, link.href);
+            const active = isActivePath(pathname, link.href, link.exact);
 
             return (
               <SheetClose key={link.href} asChild>
@@ -141,9 +142,9 @@ function MobileLinkEndState({ active }: { active: boolean }) {
   );
 }
 
-function isActivePath(pathname: string, href: string) {
-  if (href === "/") {
-    return pathname === "/";
+function isActivePath(pathname: string, href: string, exact = false) {
+  if (href === "/" || exact) {
+    return pathname === href;
   }
 
   const basePath = href.split("?")[0];

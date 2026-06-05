@@ -11,14 +11,16 @@ import {
   Loader2,
   LogOut,
   ReceiptText,
+  Truck,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MobileNavToggle } from "@/components/shared/mobile-nav-toggle";
 
 const items = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/admin/products", label: "Products", icon: Boxes },
+  { href: "/admin/shipping", label: "Shipping", icon: Truck },
   { href: "/admin/orders", label: "Orders", icon: ReceiptText },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
@@ -33,8 +35,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       href: item.href,
       label: item.label,
       icon: <Icon className="size-4" />,
+      exact: item.exact,
     };
   });
+  const activeHref = getActiveAdminHref(pathname);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -67,7 +71,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <nav className="mt-10 grid gap-2">
           {items.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            const active = activeHref === item.href;
             return (
               <Link
                 key={item.href}
@@ -139,6 +143,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </main>
     </div>
   );
+}
+
+function getActiveAdminHref(pathname: string) {
+  if (pathname === "/admin") {
+    return "/admin";
+  }
+
+  const matchingItems = items
+    .filter((item) => item.href !== "/admin")
+    .filter(
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+    )
+    .sort((a, b) => b.href.length - a.href.length);
+
+  return matchingItems[0]?.href ?? null;
 }
 
 function AdminLinkPendingIndicator() {

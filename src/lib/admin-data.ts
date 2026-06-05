@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { authCookieNames, getAuthenticatedSupabaseServerClient } from "@/src/lib/supabase-server";
+import { normalizeDeliveryRate } from "@/src/services/delivery-rates";
 import type { Product } from "@/src/types/product";
+import type { DeliveryRate } from "@/src/types/shipping";
 
 export type AdminOrder = {
   id: string;
@@ -43,6 +45,11 @@ export type AdminStoreData = {
   orderEventError: string | null;
 };
 
+export type AdminDeliveryRatesData = {
+  rates: DeliveryRate[];
+  rateError: string | null;
+};
+
 export async function getAdminStoreData(): Promise<AdminStoreData> {
   const cookieStore = await cookies();
   const token = cookieStore.get(authCookieNames.access)?.value;
@@ -81,6 +88,30 @@ export async function getAdminStoreData(): Promise<AdminStoreData> {
     productError: productResult.error?.message ?? null,
     orderError: orderResult.error?.message ?? null,
     orderEventError: orderEventResult.error?.message ?? null,
+  };
+}
+
+export async function getAdminDeliveryRatesData(): Promise<AdminDeliveryRatesData> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(authCookieNames.access)?.value;
+  const supabase = token ? getAuthenticatedSupabaseServerClient(token) : null;
+
+  if (!supabase) {
+    return {
+      rates: [],
+      rateError: "Supabase is not configured.",
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("delivery_rates")
+    .select("*")
+    .order("country_name", { ascending: true })
+    .order("state_name", { ascending: true });
+
+  return {
+    rates: data?.map(normalizeDeliveryRate) ?? [],
+    rateError: error?.message ?? null,
   };
 }
 

@@ -1,5 +1,6 @@
 import { authCookieNames, getSupabaseAdminClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
 import { initializePaystackTransaction } from "@/src/lib/paystack";
+import { getActiveDeliveryRatesForPayment } from "@/src/services/delivery-rates";
 import type { CartItem } from "@/src/store/cart-store";
 import type { Product } from "@/src/types/product";
 import {
@@ -74,6 +75,7 @@ export async function createPaystackCheckout(input: {
   }
 
   const productMap = new Map((products as Product[]).map((product) => [product.id, product]));
+  const deliveryRates = await getActiveDeliveryRatesForPayment();
   const normalizedItems = input.items.map((item) => {
     const product = productMap.get(item.id);
 
@@ -94,11 +96,23 @@ export async function createPaystackCheckout(input: {
       currency: pricingCurrency,
       quantity,
       image: product.image,
+      complimentary_shipping: product.complimentary_shipping ?? false,
     };
   });
 
   const subtotal = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingFee = getShippingFee(pricingCurrency, details.deliveryMethod);
+  const hasDeliveryFee = normalizedItems.some((item) => !item.complimentary_shipping);
+  const shippingFee = hasDeliveryFee
+    ? getShippingFee(
+        pricingCurrency,
+        details.deliveryMethod,
+        {
+          country: details.country,
+          state: details.state,
+        },
+        deliveryRates,
+      )
+    : 0;
   const total = subtotal + shippingFee;
 
   let userId: string | null = null;

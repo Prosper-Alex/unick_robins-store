@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { rememberPendingPayment } from "@/components/checkout/payment-cart-reconciler";
 import { useCartStore } from "@/src/store/cart-store";
+import type { DeliveryRate } from "@/src/types/shipping";
 import { formatCurrency } from "@/src/utils/format";
 import {
   getClientCountryFallback,
   getDisplayCurrencyForCountry,
   getProductPrice,
   getShippingFee,
+  nigeriaShippingStates,
 } from "@/src/utils/pricing";
 
 const callingCodes = [
@@ -31,8 +33,10 @@ const callingCodes = [
 
 export function CheckoutForm({
   initialCountry,
+  deliveryRates,
 }: {
   initialCountry?: string | null;
+  deliveryRates?: DeliveryRate[];
 }) {
   const router = useRouter();
   const { items } = useCartStore();
@@ -43,10 +47,12 @@ export function CheckoutForm({
   const [country, setCountry] = useState(
     initialCountry === "NG" ? "Nigeria" : (initialCountry ?? ""),
   );
+  const [state, setState] = useState("");
   const [phoneCountryCode, setPhoneCountryCode] = useState(
     initialCountry === "NG" ? "+234" : "+1",
   );
   const currency = getDisplayCurrencyForCountry(country);
+  const isNigeria = currency === "NGN";
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -65,7 +71,18 @@ export function CheckoutForm({
     (sum, item) => sum + getProductPrice(item, currency) * item.quantity,
     0,
   );
-  const shippingFee = getShippingFee(currency, deliveryMethod);
+  const hasDeliveryFee = items.some((item) => !item.complimentary_shipping);
+  const shippingFee = hasDeliveryFee
+    ? getShippingFee(
+        currency,
+        deliveryMethod,
+        {
+          country,
+          state,
+        },
+        deliveryRates,
+      )
+    : 0;
   const total = subtotal + shippingFee;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -232,12 +249,31 @@ export function CheckoutForm({
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">State</label>
-              <Input
-                name="state"
-                autoComplete="address-level1"
-                required
-                className="rounded-xl"
-              />
+              {isNigeria ? (
+                <select
+                  name="state"
+                  autoComplete="address-level1"
+                  value={state}
+                  onChange={(event) => setState(event.target.value)}
+                  required
+                  className="h-9 rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+                  <option value="">Select state</option>
+                  {nigeriaShippingStates.map((stateName) => (
+                    <option key={stateName} value={stateName}>
+                      {stateName}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <Input
+                  name="state"
+                  autoComplete="address-level1"
+                  value={state}
+                  onChange={(event) => setState(event.target.value)}
+                  required
+                  className="rounded-xl"
+                />
+              )}
             </div>
             <div className="grid gap-2">
               <label className="text-sm font-medium">Country</label>
@@ -245,7 +281,10 @@ export function CheckoutForm({
                 name="country"
                 autoComplete="country-name"
                 value={country}
-                onChange={(event) => setCountry(event.target.value)}
+                onChange={(event) => {
+                  setCountry(event.target.value);
+                  setState("");
+                }}
                 required
                 className="rounded-xl"
               />
@@ -270,7 +309,22 @@ export function CheckoutForm({
             <label className="grid cursor-pointer gap-2 rounded-2xl border border-stone-200 bg-white p-4 has-checked:border-[#d6b25e] has-checked:bg-[#fff8df]">
               <span className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">Standard delivery</span>
-                <span className="text-sm text-stone-500">Free</span>
+                <span className="text-sm text-stone-500">
+                  {hasDeliveryFee
+                    ? formatCurrency(
+                        getShippingFee(
+                          currency,
+                          "standard",
+                          {
+                            country,
+                            state,
+                          },
+                          deliveryRates,
+                        ),
+                        currency,
+                      )
+                    : "Free"}
+                </span>
               </span>
               <span className="flex items-start gap-3 text-sm leading-6 text-stone-500">
                 <input
@@ -287,10 +341,20 @@ export function CheckoutForm({
               <span className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium">Express delivery</span>
                 <span className="text-sm text-stone-500">
-                  {formatCurrency(
-                    getShippingFee(currency, "express"),
-                    currency,
-                  )}
+                  {hasDeliveryFee
+                    ? formatCurrency(
+                        getShippingFee(
+                          currency,
+                          "express",
+                          {
+                            country,
+                            state,
+                          },
+                          deliveryRates,
+                        ),
+                        currency,
+                      )
+                    : "Free"}
                 </span>
               </span>
               <span className="flex items-start gap-3 text-sm leading-6 text-stone-500">
@@ -351,7 +415,7 @@ export function CheckoutForm({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-stone-500">Shipping</span>
+              <span className="text-stone-500">Delivery</span>
               <span className="font-medium">
                 {shippingFee > 0
                   ? formatCurrency(shippingFee, currency)
