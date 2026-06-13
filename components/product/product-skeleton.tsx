@@ -1,7 +1,7 @@
 export function ProductSkeleton() {
   return (
     <div className="grid w-full gap-6 sm:gap-8 lg:gap-10">
-      <div className="grid w-full gap-3 rounded-2xl border border-white/10 bg-[#181818] p-3 shadow-xl shadow-black/25 sm:p-4 md:grid-cols-[minmax(0,20rem)_1fr] md:items-center">
+      <div className="grid w-full gap-3 rounded-2xl border border-white/10 bg-[#181818] p-3 shadow-lg shadow-black/15 sm:p-4 md:grid-cols-[minmax(0,20rem)_1fr] md:items-center">
         <div className="skeleton-shimmer h-10 w-full rounded-full bg-[#2a2a2a] sm:h-11" />
         <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:overflow-hidden">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -17,7 +17,9 @@ export function ProductSkeleton() {
         {Array.from({ length: 8 }).map((_, index) => (
           <div
             key={index}
-            className={`h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-[#181818] shadow-xl shadow-black/25 ${index >= 4 ? "hidden sm:block" : ""}`}>
+            className={`h-full w-full overflow-hidden rounded-2xl border border-white/10 bg-[#181818] shadow-[0_18px_44px_-30px_rgba(0,0,0,0.65)] ${
+              index >= 4 ? "hidden sm:block" : ""
+            }`}>
             <div className="skeleton-shimmer aspect-[16/11] bg-[#2a2a2a] sm:aspect-4/5" />
             <div className="grid gap-3 p-4 sm:gap-4 sm:p-5">
               <div className="grid gap-2">

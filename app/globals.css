@@ -72,6 +72,18 @@
   --chart-3: oklch(0.58 0.05 190);
   --chart-4: oklch(0.5 0.035 70);
   --chart-5: oklch(0.32 0.02 70);
+  --account-ink: #24102f;
+  --account-ink-hover: #3b174c;
+  --account-on-ink: #ffffff;
+  --account-gold: #d6b25e;
+  --account-gold-dark: #9a7734;
+  --account-gold-hover: #f6e7b7;
+  --account-gold-soft: #fff8df;
+  --account-gold-text: #7b5a18;
+  --account-gold-muted: #6d5520;
+  --account-link-hover: #5f4312;
+  --account-danger-hover-bg: #fee2e2;
+  --account-danger-hover-text: #b91c1c;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -215,6 +227,111 @@
 
   .hover-text-brand-muted:hover {
     color: #65526d;
+  }
+
+  .account-text-ink {
+    color: var(--account-ink);
+  }
+
+  .account-text-gold {
+    color: var(--account-gold-dark);
+  }
+
+  .account-text-gold-muted {
+    color: var(--account-gold-muted);
+  }
+
+  .account-bg-gold-soft {
+    background-color: var(--account-gold-soft);
+  }
+
+  .account-border-gold {
+    border-color: color-mix(in oklab, var(--account-gold) 45%, transparent);
+  }
+
+  .account-btn-lift {
+    transition: background-color 0.2s ease, border-color 0.2s ease,
+      color 0.2s ease, transform 0.2s ease;
+  }
+
+  .account-btn-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .account-btn-lift:active {
+    transform: translateY(0);
+  }
+
+  .account-btn-link.account-btn-link {
+    color: var(--account-gold-dark);
+  }
+
+  .account-btn-link.account-btn-link:hover {
+    color: var(--account-link-hover);
+  }
+
+  .account-btn-primary.account-btn-primary {
+    background-color: var(--account-ink);
+    color: var(--account-on-ink);
+  }
+
+  .account-btn-primary.account-btn-primary:hover,
+  .account-btn-primary.account-btn-primary:focus-visible {
+    background-color: var(--account-ink-hover);
+    color: var(--account-on-ink);
+  }
+
+  .account-btn-outline.account-btn-outline {
+    border-color: color-mix(in oklab, var(--account-gold) 45%, transparent);
+    background-color: #ffffff;
+    color: var(--account-ink);
+  }
+
+  .account-btn-outline.account-btn-outline:hover,
+  .account-btn-outline.account-btn-outline:focus-visible {
+    border-color: var(--account-gold-dark);
+    background-color: var(--account-gold-hover);
+    color: var(--account-ink);
+  }
+
+  .account-btn-copy.account-btn-copy {
+    border-color: var(--account-gold);
+    background-color: #ffffff;
+    color: var(--account-ink);
+  }
+
+  .account-btn-copy.account-btn-copy:hover,
+  .account-btn-copy.account-btn-copy:focus-visible {
+    background-color: var(--account-gold-soft);
+    color: var(--account-ink);
+  }
+
+  .account-btn-danger.account-btn-danger:hover,
+  .account-btn-danger.account-btn-danger:focus-visible {
+    background-color: var(--account-danger-hover-bg);
+    color: var(--account-danger-hover-text);
+  }
+
+  .account-btn-nav.account-btn-nav {
+    color: oklch(0.894 0.057 293.283);
+  }
+
+  .account-btn-nav.account-btn-nav:hover,
+  .account-btn-nav.account-btn-nav:focus-visible {
+    background-color: oklch(1 0 0 / 10%);
+    color: var(--account-gold-soft);
+  }
+
+  .account-btn-nav-outline.account-btn-nav-outline {
+    border-color: oklch(1 0 0 / 15%);
+    background-color: oklch(1 0 0 / 6%);
+    color: #ffffff;
+  }
+
+  .account-btn-nav-outline.account-btn-nav-outline:hover,
+  .account-btn-nav-outline.account-btn-nav-outline:focus-visible {
+    background-color: oklch(1 0 0 / 10%);
+    color: #ffffff;
   }
 
   /* Premium card hover lift */

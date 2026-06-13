@@ -8,10 +8,6 @@ import { Button } from "@/components/ui/button";
 import { getAccountOrders } from "@/src/lib/account-server";
 import { formatCurrency } from "@/src/utils/format";
 
-const accountOutlineButton =
-  "border-stone-300 bg-white text-[#24102f] hover:bg-[#fff8df] hover:text-[#24102f]";
-const accountLinkButton = "text-[#9a7734] hover:text-[#5f4312]";
-
 export const metadata = {
   title: "My Account | Unick Robins",
 };
@@ -68,7 +64,7 @@ export default async function DashboardPage() {
                     A quiet record of orders placed from this account.
                   </p>
                 </div>
-                <Button asChild variant="outline" className={`w-fit rounded-full ${accountOutlineButton}`}>
+                <Button asChild variant="outline" className="w-fit rounded-full account-btn-outline hover:shadow-sm">
                   <Link href="/account/orders">View all</Link>
                 </Button>
               </div>
@@ -93,7 +89,7 @@ export default async function DashboardPage() {
                   <p className="break-all font-medium text-[#24102f]">{user.email}</p>
                 </div>
                 <div className="border-t border-stone-100 pt-4">
-                  <Button asChild variant="outline" className={`w-full rounded-full ${accountOutlineButton}`}>
+                  <Button asChild variant="outline" className="w-full rounded-full account-btn-outline hover:shadow-sm">
                     <Link href="/account/update-password">Change password</Link>
                   </Button>
                 </div>
@@ -106,7 +102,7 @@ export default async function DashboardPage() {
                 <div className="mt-4 text-sm">
                   <p className="font-medium">#{latestOrder.id.slice(0, 8)}</p>
                   <p className="mt-1 text-stone-500">{formatCurrency(latestOrder.total)}</p>
-                  <Button asChild variant="link" className={`mt-2 h-auto px-0 ${accountLinkButton}`}>
+                  <Button asChild variant="link" className="mt-2 h-auto px-0 account-btn-link">
                     <Link href={`/account/orders/${latestOrder.id}`}>Open details</Link>
                   </Button>
                 </div>

@@ -383,6 +383,10 @@ begin
     return target_order.id;
   end if;
 
+  if target_order.status = 'cancelled' or target_order.payment_status = 'cancelled_by_customer' then
+    raise exception 'Payment arrived after customer cancellation for order %', target_order.id;
+  end if;
+
   for order_item in select * from jsonb_array_elements(target_order.items)
   loop
     item_id := (order_item->>'id')::uuid;

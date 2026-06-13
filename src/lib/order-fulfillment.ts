@@ -3,6 +3,7 @@ import { toPaystackSubunit, verifyPaystackTransaction } from "@/src/lib/paystack
 
 type OrderForPayment = {
   id: string;
+  status: string | null;
   total: number | string | null;
   pricing_currency: string | null;
   payment_status: string | null;
@@ -18,7 +19,7 @@ export async function confirmPaystackOrder(reference: string) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("id,total,pricing_currency,payment_status,payment_reference")
+    .select("id,status,total,pricing_currency,payment_status,payment_reference")
     .eq("payment_reference", reference)
     .single();
 
@@ -27,6 +28,7 @@ export async function confirmPaystackOrder(reference: string) {
   }
 
   const payment = await verifyPaystackTransaction(reference);
+  const orderForPayment = order as OrderForPayment;
 
   if (payment.status !== "success") {
     await supabase
@@ -35,12 +37,25 @@ export async function confirmPaystackOrder(reference: string) {
         status: "payment_failed",
         payment_status: payment.status,
       })
-      .eq("id", (order as OrderForPayment).id);
+      .eq("id", orderForPayment.id)
+      .neq("status", "cancelled");
 
     throw new Error(`Payment is ${payment.status}.`);
   }
 
-  const expectedAmount = toPaystackSubunit(Number((order as OrderForPayment).total ?? 0));
+  if (orderForPayment.status === "cancelled" || orderForPayment.payment_status === "cancelled_by_customer") {
+    await supabase
+      .from("orders")
+      .update({
+        status: "payment_review",
+        payment_status: "paid_after_customer_cancelled",
+      })
+      .eq("id", orderForPayment.id);
+
+    throw new Error("Payment arrived after this order was cancelled. The order is in review.");
+  }
+
+  const expectedAmount = toPaystackSubunit(Number(orderForPayment.total ?? 0));
 
   if (payment.amount !== expectedAmount) {
     await supabase
@@ -49,12 +64,12 @@ export async function confirmPaystackOrder(reference: string) {
         status: "payment_review",
         payment_status: "amount_mismatch",
       })
-      .eq("id", (order as OrderForPayment).id);
+      .eq("id", orderForPayment.id);
 
     throw new Error("Payment amount does not match order total.");
   }
 
-  const expectedCurrency = (order as OrderForPayment).pricing_currency;
+  const expectedCurrency = orderForPayment.pricing_currency;
 
   if (expectedCurrency && payment.currency !== expectedCurrency) {
     await supabase
@@ -63,7 +78,7 @@ export async function confirmPaystackOrder(reference: string) {
         status: "payment_review",
         payment_status: "currency_mismatch",
       })
-      .eq("id", (order as OrderForPayment).id);
+      .eq("id", orderForPayment.id);
 
     throw new Error("Payment currency does not match order currency.");
   }
@@ -76,5 +91,5 @@ export async function confirmPaystackOrder(reference: string) {
     throw new Error(confirmError.message);
   }
 
-  return String(confirmedOrderId ?? (order as OrderForPayment).id);
+  return String(confirmedOrderId ?? orderForPayment.id);
 }

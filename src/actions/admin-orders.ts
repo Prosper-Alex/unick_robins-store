@@ -14,6 +14,7 @@ const allowedStatuses = new Set([
   "cancelled",
   "refunded",
   "payment_failed",
+  "payment_review",
 ]);
 
 const startedFulfillmentStatuses = new Set(["processing", "shipped", "delivered"]);

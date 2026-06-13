@@ -57,7 +57,10 @@ export function PaymentCartReconciler() {
           return;
         }
 
-        if (result.missing || result.paymentStatus === "payment_failed") {
+        if (
+          result.missing ||
+          ["payment_failed", "cancelled_by_customer", "paid_after_customer_cancelled"].includes(result.paymentStatus ?? "")
+        ) {
           forgetPendingPayment();
         }
       } catch {
