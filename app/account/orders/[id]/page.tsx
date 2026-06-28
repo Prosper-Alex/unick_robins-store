@@ -31,13 +31,19 @@ export default async function OrderDetailsPage({
   }
   const currency = order.pricing_currency;
   const displayOrderId = formatOrderId(order.id);
-  const canManagePendingPayment = isPendingPaymentOrder(order.status, order.payment_status);
+  const canManagePendingPayment = isPendingPaymentOrder(
+    order.status,
+    order.payment_status,
+  );
 
   return (
     <AccountShell>
       {payment === "success" && <ClearCartOnSuccess />}
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <Button asChild variant="link" className="mb-6 h-auto px-0 account-btn-link">
+        <Button
+          asChild
+          variant="link"
+          className="mb-6 h-auto px-0 account-btn-link">
           <Link href="/account/orders">
             <ArrowLeft className="size-4" />
             Back to orders
@@ -56,11 +62,15 @@ export default async function OrderDetailsPage({
               <h1 className="mt-2 text-3xl font-normal leading-[1.1] tracking-tight">
                 {displayOrderId}
               </h1>
-              <p className="mt-2 text-sm text-stone-500">{formatDate(order.created_at)}</p>
+              <p className="mt-2 text-sm text-stone-500">
+                {formatDate(order.created_at)}
+              </p>
             </div>
             <div className="grid gap-2 text-left sm:text-right">
               <OrderStatus status={order.status} />
-              <p className="text-2xl font-medium account-text-ink">{formatCurrency(order.total, currency)}</p>
+              <p className="text-2xl font-medium account-text-ink">
+                {formatCurrency(order.total, currency)}
+              </p>
             </div>
           </div>
 
@@ -87,8 +97,7 @@ export default async function OrderDetailsPage({
               order.items.map((item, index) => (
                 <div
                   key={`${item.id ?? "item"}-${index}`}
-                  className="grid gap-4 rounded-2xl border border-stone-100 bg-stone-50 p-4 sm:grid-cols-[64px_1fr_auto] sm:items-center"
-                >
+                  className="grid gap-4 rounded-2xl border border-stone-100 bg-stone-50 p-4 sm:grid-cols-[64px_1fr_auto] sm:items-center">
                   <div className="relative size-16 overflow-hidden rounded-xl bg-white">
                     {item.image ? (
                       <Image
@@ -101,13 +110,19 @@ export default async function OrderDetailsPage({
                     ) : null}
                   </div>
                   <div>
-                    <p className="font-medium account-text-ink">{item.title ?? "Product"}</p>
+                    <p className="font-medium account-text-ink">
+                      {item.title ?? "Product"}
+                    </p>
                     <p className="mt-1 text-sm text-stone-500">
-                      Qty {item.quantity ?? 1} · {formatCurrency(item.price ?? 0, currency)} each
+                      Qty {item.quantity ?? 1} ·{" "}
+                      {formatCurrency(item.price ?? 0, currency)} each
                     </p>
                   </div>
                   <p className="font-medium account-text-ink">
-                    {formatCurrency((item.price ?? 0) * (item.quantity ?? 1), currency)}
+                    {formatCurrency(
+                      (item.price ?? 0) * (item.quantity ?? 1),
+                      currency,
+                    )}
                   </p>
                 </div>
               ))
@@ -129,11 +144,19 @@ export default async function OrderDetailsPage({
                       order.shipping_address.state,
                       order.shipping_address.country,
                       order.shipping_address.postalCode,
-                    ].filter(Boolean).join(", ")}
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
                   </p>
                 ) : null}
-                {order.delivery_method && <p className="capitalize">Delivery: {order.delivery_method}</p>}
-                {order.tracking_number && <p>Tracking: {order.tracking_number}</p>}
+                {order.delivery_method && (
+                  <p className="capitalize">
+                    Delivery: {order.delivery_method}
+                  </p>
+                )}
+                {order.tracking_number && (
+                  <p>Tracking: {order.tracking_number}</p>
+                )}
               </div>
             </div>
             <div className="rounded-2xl bg-stone-50 p-4">
@@ -141,17 +164,25 @@ export default async function OrderDetailsPage({
               <div className="mt-3 grid gap-2 text-sm text-stone-600">
                 <div className="flex justify-between gap-4">
                   <span>Status</span>
-                  <span className="capitalize">{order.payment_status.replaceAll("_", " ")}</span>
+                  <span className="capitalize">
+                    {order.payment_status.replaceAll("_", " ")}
+                  </span>
                 </div>
                 {order.payment_reference && (
                   <div className="flex justify-between gap-4">
                     <span>Reference</span>
-                    <span className="break-all text-right font-mono text-xs">{order.payment_reference}</span>
+                    <span className="break-all text-right font-mono text-xs">
+                      {order.payment_reference}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between gap-4">
                   <span>Shipping</span>
-                  <span>{order.shipping_fee > 0 ? formatCurrency(order.shipping_fee, currency) : "Free"}</span>
+                  <span>
+                    {order.shipping_fee > 0
+                      ? formatCurrency(order.shipping_fee, currency)
+                      : "Free"}
+                  </span>
                 </div>
                 <div className="flex justify-between gap-4 border-t border-stone-200 pt-3 text-lg font-medium account-text-ink">
                   <span>Total</span>
@@ -179,27 +210,62 @@ function OrderTimeline({
 }) {
   const cancelled = status === "cancelled";
   const failed = status === "payment_failed";
-  const paid = paymentStatus === "paid" || ["paid", "processing", "shipped", "delivered", "completed"].includes(status);
-  const processing = ["processing", "shipped", "delivered", "completed"].includes(status);
+  const paid =
+    paymentStatus === "paid" ||
+    ["paid", "processing", "shipped", "delivered", "completed"].includes(
+      status,
+    );
+  const processing = [
+    "processing",
+    "shipped",
+    "delivered",
+    "completed",
+  ].includes(status);
   const shipped = ["shipped", "delivered", "completed"].includes(status);
   const delivered = ["delivered", "completed"].includes(status);
 
   const steps = cancelled
     ? [
-        { label: "Order created", detail: formatDate(createdAt), state: "done" },
-        { label: "Payment pending", detail: "No confirmed payment attached", state: "current" },
-        { label: "Cancelled", detail: "This unpaid order was closed", state: "problem" },
+        {
+          label: "Order created",
+          detail: formatDate(createdAt),
+          state: "done",
+        },
+        {
+          label: "Payment pending",
+          detail: "No confirmed payment attached",
+          state: "current",
+        },
+        {
+          label: "Cancelled",
+          detail: "This unpaid order was closed",
+          state: "problem",
+        },
       ]
     : failed
       ? [
-          { label: "Order created", detail: formatDate(createdAt), state: "done" },
-          { label: "Payment failed", detail: "Payment was not completed", state: "problem" },
+          {
+            label: "Order created",
+            detail: formatDate(createdAt),
+            state: "done",
+          },
+          {
+            label: "Payment failed",
+            detail: "Payment was not completed",
+            state: "problem",
+          },
         ]
       : [
-          { label: "Order created", detail: formatDate(createdAt), state: "done" },
+          {
+            label: "Order created",
+            detail: formatDate(createdAt),
+            state: "done",
+          },
           {
             label: paid ? "Payment confirmed" : "Payment pending",
-            detail: paidAt ? formatDate(paidAt) : "Complete payment to continue",
+            detail: paidAt
+              ? formatDate(paidAt)
+              : "Complete payment to continue",
             state: paid ? "done" : "current",
           },
           {
@@ -240,9 +306,8 @@ function OrderTimeline({
               className={`relative grid grid-cols-[1.75rem_1fr] gap-3 sm:flex sm:flex-1 sm:flex-col sm:items-center sm:gap-2 sm:px-2 sm:text-center ${
                 isLastStep
                   ? ""
-                  : `sm:after:absolute sm:after:left-[calc(50%+0.875rem)] sm:after:right-[calc(-50%+0.875rem)] sm:after:top-[0.875rem] sm:after:h-0.5 sm:after:content-[''] ${connectorTone}`
-              }`}
-            >
+                  : `sm:after:absolute sm:after:left-[calc(50%+0.875rem)] sm:after:right-[calc(-50%+0.875rem)] sm:after:top-3.5 sm:after:h-0.5 sm:after:content-[''] ${connectorTone}`
+              }`}>
               <span
                 className={
                   step.state === "done"
@@ -250,7 +315,7 @@ function OrderTimeline({
                     : step.state === "problem"
                       ? "relative z-10 mt-0.5 flex size-7 items-center justify-center rounded-full bg-red-600 text-white"
                       : step.state === "current"
-                        ? "relative z-10 mt-0.5 flex size-7 items-center justify-center rounded-full bg-[var(--account-gold)] account-text-ink"
+                        ? "relative z-10 mt-0.5 flex size-7 items-center justify-center rounded-full bg-(--account-gold) account-text-ink"
                         : "relative z-10 mt-0.5 flex size-7 items-center justify-center rounded-full bg-white text-stone-400 ring-1 ring-stone-200"
                 }>
                 {step.state === "done" ? (
@@ -262,8 +327,12 @@ function OrderTimeline({
                 )}
               </span>
               <span>
-                <span className="block text-sm font-medium account-text-ink">{step.label}</span>
-                <span className="mt-0.5 block text-sm leading-5 text-stone-500">{step.detail}</span>
+                <span className="block text-sm font-medium account-text-ink">
+                  {step.label}
+                </span>
+                <span className="mt-0.5 block text-sm leading-5 text-stone-500">
+                  {step.detail}
+                </span>
               </span>
             </li>
           );

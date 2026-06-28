@@ -95,14 +95,21 @@ export default async function ProductDetailsPage({
                   />
                 ))}
               </span>
-              <span>{reviewCount > 0 ? `${rating.toFixed(1)} rating` : "No ratings yet"}</span>
+              <span>
+                {reviewCount > 0
+                  ? `${rating.toFixed(1)} rating`
+                  : "No ratings yet"}
+              </span>
               <span>{reviewCount} reviews</span>
             </div>
             <p className="mt-5 text-lg leading-8 text-violet-100">
               {getProductSummary(product)}
             </p>
             <p className="mt-8 text-2xl font-medium leading-[1.12] text-[#fff8df]">
-              <OdometerValue value={getProductPrice(product, currency)} currency={currency} />
+              <OdometerValue
+                value={getProductPrice(product, currency)}
+                currency={currency}
+              />
             </p>
             <div className="mt-6 grid gap-3 rounded-3xl border border-white/10 bg-white/10 p-4 text-sm text-violet-50">
               <p className="flex items-center justify-between gap-4">
@@ -117,14 +124,14 @@ export default async function ProductDetailsPage({
               </p>
               {hasComplimentaryShipping(product) && (
                 <p className="flex items-center gap-2">
-                  <Truck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Complimentary
-                  shipping available
+                  <Truck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" />{" "}
+                  Complimentary shipping available
                 </p>
               )}
               {isTransferReady(product) && (
                 <p className="flex items-center gap-2">
-                  <Sparkles className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Transfer ready
-                  finish
+                  <Sparkles className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" />{" "}
+                  Transfer ready finish
                 </p>
               )}
             </div>
@@ -133,18 +140,18 @@ export default async function ProductDetailsPage({
               <Button
                 asChild
                 variant="outline"
-                className="h-12 min-w-[9.25rem] rounded-full border-white/25 bg-white/10 px-8 text-[#fff8df] hover:bg-[#fff8df] hover:text-[#24102f] active:bg-[#f6e7b7] disabled:bg-white/10 disabled:text-[#fff8df]">
+                className="h-12 min-w-37 rounded-full border-white/25 bg-white/10 px-8 text-[#fff8df] hover:bg-[#fff8df] hover:text-[#24102f] active:bg-[#f6e7b7] disabled:bg-white/10 disabled:text-[#fff8df]">
                 <Link href="/cart">View cart</Link>
               </Button>
             </div>
             <div className="mt-8 grid gap-3 text-sm text-violet-100 sm:grid-cols-2">
               <p className="flex items-center gap-2">
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Delivery
-                estimate: 2-4 business days
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" />{" "}
+                Delivery estimate: 2-4 business days
               </p>
               <p className="flex items-center gap-2">
-                <PackageCheck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" /> Secure
-                checkout architecture ready
+                <PackageCheck className="mt-0.5 size-4 shrink-0 text-[#f6d87f]" />{" "}
+                Secure checkout architecture ready
               </p>
             </div>
           </div>
@@ -181,7 +188,12 @@ export default async function ProductDetailsPage({
                     key={item.id}
                     className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-2xl bg-violet-50 px-4 py-3">
                     <span className="min-w-0 font-medium">{item.title}</span>
-                    <span className="whitespace-nowrap">{formatCurrency(getProductPrice(item, currency), currency)}</span>
+                    <span className="whitespace-nowrap">
+                      {formatCurrency(
+                        getProductPrice(item, currency),
+                        currency,
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -209,7 +221,10 @@ export default async function ProductDetailsPage({
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex text-[#f6d87f]">
                       {Array.from({ length: 5 }).map((_, star) => (
-                        <Star key={star} className={`size-4 ${star < review.rating ? "fill-current" : ""}`} />
+                        <Star
+                          key={star}
+                          className={`size-4 ${star < review.rating ? "fill-current" : ""}`}
+                        />
                       ))}
                     </div>
                     {review.verified_purchase && (
@@ -220,7 +235,9 @@ export default async function ProductDetailsPage({
                     )}
                   </div>
                   {review.title && (
-                    <h3 className="mb-2 text-lg font-semibold text-[#fff8df]">{review.title}</h3>
+                    <h3 className="mb-2 text-lg font-semibold text-[#fff8df]">
+                      {review.title}
+                    </h3>
                   )}
                   <p className="leading-7">{review.body}</p>
                   <p className="mt-4 text-sm text-violet-200">
@@ -336,7 +353,9 @@ function RatingSummary({ summary }: { summary: RatingSummaryData }) {
           <p className="text-5xl font-semibold leading-none text-[#fff8df]">
             {reviewCount > 0 ? rating.toFixed(1) : "0.0"}
           </p>
-          <div className="mt-3 flex text-[#f6d87f]" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+          <div
+            className="mt-3 flex text-[#f6d87f]"
+            aria-label={`${rating.toFixed(1)} out of 5 stars`}>
             {Array.from({ length: 5 }).map((_, index) => (
               <Star
                 key={index}
@@ -350,7 +369,9 @@ function RatingSummary({ summary }: { summary: RatingSummaryData }) {
         </div>
         <div className="grid gap-2">
           {distribution.map((item) => (
-            <div key={item.stars} className="grid grid-cols-[1.8rem_minmax(0,1fr)_2rem] items-center gap-2 text-xs text-violet-100/75">
+            <div
+              key={item.stars}
+              className="grid grid-cols-[1.8rem_minmax(0,1fr)_2rem] items-center gap-2 text-xs text-violet-100/75">
               <span className="font-mono">{item.stars}</span>
               <div className="h-2 overflow-hidden rounded-full bg-white/10">
                 <div
@@ -364,7 +385,8 @@ function RatingSummary({ summary }: { summary: RatingSummaryData }) {
         </div>
       </div>
       <p className="mt-5 text-sm leading-6 text-violet-100/70">
-        Ratings are averaged from published customer reviews. New reviews count as soon as they are saved.
+        Ratings are averaged from published customer reviews. New reviews count
+        as soon as they are saved.
       </p>
     </div>
   );
