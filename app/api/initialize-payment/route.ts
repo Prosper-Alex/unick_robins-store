@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  createPaystackCheckout,
+  createCheckoutPayment,
   getAccessTokenFromCookieStore,
   type CheckoutDetails,
 } from "@/src/lib/checkout-payment";
@@ -10,6 +10,7 @@ import type { CartItem } from "@/src/store/cart-store";
 type InitializePaymentRequest = {
   items?: CartItem[];
   details?: CheckoutDetails;
+  paymentProvider?: string;
 };
 
 export async function POST(request: Request) {
@@ -28,9 +29,10 @@ export async function POST(request: Request) {
   try {
     const cookieStore = await cookies();
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
-    const result = await createPaystackCheckout({
+    const result = await createCheckoutPayment({
       items: payload.items,
       details: payload.details,
+      paymentProvider: payload.paymentProvider,
       accessToken: getAccessTokenFromCookieStore(cookieStore),
       origin,
     });

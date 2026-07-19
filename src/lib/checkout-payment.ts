@@ -1,5 +1,6 @@
 import { authCookieNames, getSupabaseAdminClient, getSupabaseServerClient } from "@/src/lib/supabase-server";
 import { initializePaystackTransaction } from "@/src/lib/paystack";
+import { initializeStripeCheckoutSession } from "@/src/lib/stripe";
 import { getActiveDeliveryRatesForPayment } from "@/src/services/delivery-rates";
 import type { CartItem } from "@/src/store/cart-store";
 import type { Product } from "@/src/types/product";
@@ -8,6 +9,8 @@ import {
   getProductPrice,
   getShippingFee,
 } from "@/src/utils/pricing";
+
+export type PaymentProvider = "paystack" | "stripe";
 
 export type CheckoutDetails = {
   email: string;
@@ -28,9 +31,10 @@ export type CheckoutResult = {
   reference: string;
 };
 
-export async function createPaystackCheckout(input: {
+export async function createCheckoutPayment(input: {
   items: CartItem[];
   details: CheckoutDetails;
+  paymentProvider?: string;
   accessToken?: string;
   origin: string;
 }): Promise<CheckoutResult> {
@@ -46,6 +50,7 @@ export async function createPaystackCheckout(input: {
   }
 
   const details = input.details;
+  const paymentProvider = normalizePaymentProvider(input.paymentProvider);
   const customerEmail = details.email.trim().toLowerCase();
   const customerName = `${details.firstName.trim()} ${details.lastName.trim()}`.trim();
   const requiredFields = [
@@ -65,6 +70,7 @@ export async function createPaystackCheckout(input: {
 
   const productIds = Array.from(new Set(input.items.map((item) => item.id)));
   const pricingCurrency = getDisplayCurrencyForCountry(details.country);
+  assertProviderSupportsCurrency(paymentProvider, pricingCurrency);
   const { data: products, error: productError } = await adminSupabase
     .from("products")
     .select("*")
@@ -135,7 +141,7 @@ export async function createPaystackCheckout(input: {
       user_id: userId,
       status: "pending_payment",
       payment_status: "unpaid",
-      payment_provider: "paystack",
+      payment_provider: paymentProvider,
       payment_reference: reference,
       customer_email: customerEmail,
       customer_name: customerName,
@@ -161,21 +167,34 @@ export async function createPaystackCheckout(input: {
     throw new Error(error.message);
   }
 
-  const initialized = await initializePaystackTransaction({
-    email: customerEmail,
-    amount: total,
-    currency: pricingCurrency,
-    reference,
-    callbackUrl: `${normalizeOrigin(input.origin)}/api/verify-payment`,
-    metadata: {
-      order_id: data.id,
-      customer_name: customerName,
-    },
-  });
+  const origin = normalizeOrigin(input.origin);
+  const initialized =
+    paymentProvider === "stripe"
+      ? await initializeStripeCheckoutSession({
+          reference,
+          orderId: data.id,
+          customerEmail,
+          customerName,
+          amount: total,
+          currency: pricingCurrency,
+          successUrl: `${origin}/api/stripe/callback?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${origin}/checkout/cancel?reason=stripe_cancelled`,
+        })
+      : await initializePaystackTransaction({
+          email: customerEmail,
+          amount: total,
+          currency: pricingCurrency,
+          reference,
+          callbackUrl: `${origin}/api/verify-payment`,
+          metadata: {
+            order_id: data.id,
+            customer_name: customerName,
+          },
+        });
 
   return {
     orderId: data.id,
-    authorizationUrl: initialized.authorization_url,
+    authorizationUrl: "authorization_url" in initialized ? initialized.authorization_url : initialized.url!,
     reference,
   };
 }
@@ -193,4 +212,27 @@ function normalizeCartQuantity(value: unknown) {
 
 function normalizeOrigin(origin: string) {
   return origin.replace(/\/+$/, "");
+}
+
+function assertProviderSupportsCurrency(provider: PaymentProvider, currency: "NGN" | "USD") {
+  // Currency is derived again on the server so a tampered checkout payload cannot force the wrong provider.
+  if (provider === "paystack" && currency !== "NGN") {
+    throw new Error("Paystack is only available for Nigeria checkout.");
+  }
+
+  if (provider === "stripe" && currency !== "USD") {
+    throw new Error("Stripe is only available for international USD checkout.");
+  }
+}
+
+function normalizePaymentProvider(value?: string): PaymentProvider {
+  if (!value) {
+    return "paystack";
+  }
+
+  if (value === "paystack" || value === "stripe") {
+    return value;
+  }
+
+  throw new Error("Unsupported payment provider.");
 }

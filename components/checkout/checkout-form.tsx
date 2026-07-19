@@ -17,6 +17,8 @@ import {
   nigeriaShippingStates,
 } from "@/src/utils/pricing";
 
+type PaymentProvider = "paystack" | "stripe";
+
 const callingCodes = [
   { value: "+234", label: "+234", country: "NG" },
   { value: "+233", label: "+233", country: "GH" },
@@ -44,6 +46,7 @@ export function CheckoutForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState("standard");
+  const [paymentProvider, setPaymentProvider] = useState<PaymentProvider>("stripe");
   const [country, setCountry] = useState(
     initialCountry === "NG" ? "Nigeria" : (initialCountry ?? ""),
   );
@@ -53,6 +56,9 @@ export function CheckoutForm({
   );
   const currency = getDisplayCurrencyForCountry(country);
   const isNigeria = currency === "NGN";
+  const availablePaymentProviders: PaymentProvider[] = isNigeria
+    ? ["paystack"]
+    : ["stripe"];
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -66,6 +72,11 @@ export function CheckoutForm({
       setMounted(true);
     });
   }, [initialCountry]);
+
+  useEffect(() => {
+    // Geo/country detection only preselects a path; the customer-selected shipping country drives payment.
+    setPaymentProvider(isNigeria ? "paystack" : "stripe");
+  }, [isNigeria]);
 
   const subtotal = items.reduce(
     (sum, item) => sum + getProductPrice(item, currency) * item.quantity,
@@ -118,6 +129,7 @@ export function CheckoutForm({
             postalCode: String(formData.get("postalCode") ?? ""),
             deliveryMethod,
           },
+          paymentProvider,
         }),
       });
       const result = (await response.json()) as {
@@ -374,14 +386,44 @@ export function CheckoutForm({
                   <ShieldCheck className="size-5" />
                 </span>
                 <div>
-                  <p className="font-medium">Secured by Paystack</p>
+                  <p className="font-medium">
+                    Secured by {paymentProvider === "stripe" ? "Stripe" : "Paystack"}
+                  </p>
                   <p className="mt-1 text-sm leading-6 text-emerald-800">
-                    You will be redirected to Paystack to complete payment. The
-                    order is marked paid only after Paystack verifies the
-                    transaction.
+                    You will be redirected to {paymentProvider === "stripe" ? "Stripe" : "Paystack"} to complete payment. The
+                    order is marked paid only after the provider verifies the
+                    amount and currency.
                   </p>
                 </div>
               </div>
+            </div>
+            <div className="grid gap-3">
+              {availablePaymentProviders.map((provider) => (
+                <label
+                  key={provider}
+                  className="grid cursor-pointer gap-2 rounded-2xl border border-stone-200 bg-white p-4 has-checked:border-[#d6b25e] has-checked:bg-[#fff8df]">
+                  <span className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium">
+                      {provider === "stripe" ? "International card" : "Local card or transfer"}
+                    </span>
+                    <span className="text-sm text-stone-500">
+                      {provider === "stripe" ? "Stripe" : "Paystack"}
+                    </span>
+                  </span>
+                  <span className="flex items-start gap-3 text-sm leading-6 text-stone-500">
+                    <input
+                      type="radio"
+                      name="paymentProvider"
+                      value={provider}
+                      checked={paymentProvider === provider}
+                      onChange={() => setPaymentProvider(provider)}
+                    />
+                    {provider === "stripe"
+                      ? "Pay securely in USD with an international card."
+                      : "Pay securely in NGN with Paystack."}
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
         </div>
