@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local Supabase exports/backups (never commit secrets or production data)
+supabase/local-backup.sql

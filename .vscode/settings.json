@@ -1,0 +1,16 @@
+{
+  "files.exclude": {
+    "supabase/migrations/20260511195000_add_payment_shipping_fields_to_orders.sql": true,
+    "supabase/migrations/20260512120000_add_newsletter_subscribers.sql": true,
+    "supabase/migrations/20260513110000_add_location_pricing_to_products.sql": true,
+    "supabase/migrations/20260514120000_add_review_metadata.sql": true,
+    "supabase/migrations/20260514123000_add_product_category_taxonomy.sql": true,
+    "supabase/migrations/20260516130000_add_email_confirmation_checks.sql": true,
+    "supabase/migrations/20260516143000_replace_email_confirmation_checks_with_signup_otp.sql": true,
+    "supabase/migrations/20260517120000_grant_user_profile_permissions.sql": true,
+    "supabase/migrations/20260517123000_grant_newsletter_subscriber_permissions.sql": true,
+    "supabase/migrations/20260520120000_add_order_events.sql": true,
+    "supabase/migrations/20260605100000_add_delivery_rates.sql": true,
+    "supabase/migrations/20260613113243_harden_pending_payment_cancellation.sql": true
+  }
+}
