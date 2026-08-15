@@ -196,6 +196,7 @@ grant usage on schema public to anon, authenticated, service_role;
 grant select on table public.delivery_rates to anon;
 grant select, insert, update, delete on table public.delivery_rates to authenticated;
 grant select, insert, update, delete on table public.delivery_rates to service_role;
+grant select, insert, update on table public.reviews to service_role;
 
 drop policy if exists "Products are public" on public.products;
 drop policy if exists "Categories are public" on public.categories;
